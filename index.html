@@ -316,6 +316,8 @@
   }
   .meta small { display: block; color: var(--muted); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
   .meta b { font-weight: 700; }
+  #card-mode-cell,
+  #card-share-cell { grid-column: 1 / -1; }
   .reward-line {
     margin: 10px 0 0;
     font-size: 12.5px;
@@ -521,34 +523,35 @@
         <div class="stage">
           <div class="story">
             <form class="launch" id="launch-step">
-              <h2>Set the holder reward.</h2>
-              <p class="hint">The share and the reward are set together. They lock at launch.</p>
+              <h2>What holders get.</h2>
+              <p class="hint">Pick their share of each trade, and what that share becomes. It locks in when you launch.</p>
               <fieldset>
-                <legend>Holder share</legend>
+                <legend>Their share</legend>
                 <div class="picks" id="shares">
                   <label class="chip"><input type="radio" name="share" value="1">1%</label>
                   <label class="chip"><input type="radio" name="share" value="2">2%</label>
                   <label class="chip"><input type="radio" name="share" value="3">3%</label>
                   <label class="chip"><input type="radio" name="share" value="4">4%</label>
                 </div>
+                <p class="hint">From 1% to 4% of each trade.</p>
               </fieldset>
               <fieldset>
-                <legend>Holder reward</legend>
+                <legend>What holders get</legend>
                 <div class="modes" id="rewards">
                   <label class="mode">
                     <input type="radio" name="reward" value="credits">
-                    <strong>AI credits</strong>
-                    <span>That share of each trade becomes AI credits. Holders can redeem them for API usage.</span>
+                    <strong>AI credits they can spend</strong>
+                    <span>Their share of each trade turns into credits for API use.</span>
                   </label>
                   <label class="mode">
                     <input type="radio" name="reward" value="gas">
-                    <strong>Gas-fee reduction</strong>
-                    <span>That share of each trade is routed to offset the token's gas instead of minting credits.</span>
+                    <strong>Lower the gas on this coin</strong>
+                    <span>Same share, but it lowers the gas on this coin. No credits.</span>
                   </label>
                 </div>
               </fieldset>
               <button type="submit" class="launch-btn" id="launch-btn" disabled>Launch</button>
-              <p class="hint" id="launch-status" aria-live="polite">Pick a share from 1% to 4%, and pick AI credits or gas-fee reduction.</p>
+              <p class="hint" id="launch-status" aria-live="polite">Pick 1% to 4%, and what holders get.</p>
             </form>
             <h2>Then the card is in the feed.</h2>
             <p>Instagram, Facebook, or X. Same card. Name, ticker, your slice, and the chain. People meet the token where they already scroll.</p>
@@ -577,8 +580,8 @@
                 <div class="meta">
                   <div><small>Your slice</small><b id="card-slice">20% at the open</b></div>
                   <div><small>Chain</small><b id="card-chain">Base</b></div>
-                  <div id="card-mode-cell" hidden><small>Holder reward</small><b id="card-mode"></b></div>
-                  <div id="card-share-cell" hidden><small>Holder share</small><b id="card-share"></b></div>
+                  <div id="card-mode-cell" hidden><small>What holders get</small><b id="card-mode"></b></div>
+                  <div id="card-share-cell" hidden><small>Their share</small><b id="card-share"></b></div>
                 </div>
                 <p class="reward-line" id="card-reward-line" hidden></p>
               </div>
@@ -616,16 +619,16 @@
   var share = "";
   var mode = "";
   var launched = false;
-  var rewardNames = { credits: "AI credits", gas: "Gas-fee reduction" };
+  var rewardNames = { credits: "AI credits they can spend", gas: "Lower the gas on this coin" };
   var form = document.getElementById("launch-step");
   var launchBtn = document.getElementById("launch-btn");
   var launchStatus = document.getElementById("launch-status");
   var timer = null;
   function rewardLine(pct, picked) {
     if (picked === "credits") {
-      return pct + "% of each trade becomes AI credits holders can redeem for API usage.";
+      return pct + "% of each trade becomes AI credits they can spend on API use.";
     }
-    return pct + "% of each trade is routed to offset this token's gas.";
+    return pct + "% of each trade goes to lower the gas on this coin.";
   }
   function paint() {
     var s = stories[i];
@@ -639,7 +642,7 @@
     document.getElementById("card-slice").textContent = s.slice + " at the open";
     document.getElementById("card-chain").textContent = chain;
     document.getElementById("feed-name").textContent = feed;
-    document.getElementById("post-where").textContent = launched ? (feed + " · launched") : (feed + " · token card");
+    document.getElementById("post-where").textContent = launched ? (feed + " · locked in") : (feed + " · token card");
     var modeCell = document.getElementById("card-mode-cell");
     var shareCell = document.getElementById("card-share-cell");
     var line = document.getElementById("card-reward-line");
@@ -662,8 +665,8 @@
     if (launched) return;
     launchBtn.disabled = !(share && mode);
     launchStatus.textContent = (share && mode)
-      ? "Ready to launch. This choice locks at launch."
-      : "Pick a share from 1% to 4%, and pick AI credits or gas-fee reduction.";
+      ? "Looks right. It locks in when you launch."
+      : "Pick 1% to 4%, and what holders get.";
   }
   document.getElementById("chains").addEventListener("click", function (e) {
     var b = e.target.closest("button");
@@ -692,8 +695,8 @@
     form.classList.add("is-locked");
     form.querySelectorAll("input").forEach(function (el) { el.disabled = true; });
     launchBtn.disabled = true;
-    launchBtn.textContent = "Launched";
-    launchStatus.textContent = "Locked at launch. This page does not send a transaction.";
+    launchBtn.textContent = "Locked in";
+    launchStatus.textContent = "Locked in. Nothing here sends a transaction.";
     paint();
   });
   timer = setInterval(function () { i = (i + 1) % stories.length; paint(); }, 4200);
