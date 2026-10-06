@@ -394,6 +394,10 @@ function auditFixture(policies: PolicyView[]) {
     approverUserId: GUARD_USER,
     policies,
     chains: ["base-sepolia", "solana-devnet"],
+    wallets: [
+      { walletId: "wallet-base", chain: "base-sepolia" },
+      { walletId: "wallet-sol", chain: "solana-devnet" },
+    ],
     canaryStatus: "ACTIVITY_STATUS_CONSENSUS_NEEDED",
   });
 }
@@ -468,6 +472,74 @@ test("a condition that mixes chain namespaces always errors and is not a backsto
   assert.equal(allowReport.reasons.some((reason) => reason.code === "POLICY_ALWAYS_ERRORS"), true);
   assert.equal(allowReport.reasons.some((reason) => reason.code === "CONSENSUS_MISSING"), true);
   assert.equal(allowReport.reasons.some((reason) => reason.code === "AGENT_CAN_SIGN_ALONE"), false);
+});
+
+test("recipient allowlist is required for each chain that has a sign ALLOW", () => {
+  const baseOnly = auditFixture(policiesFromFile());
+  assert.equal(baseOnly.ok, true, JSON.stringify(baseOnly.reasons));
+
+  const solanaAllow = [
+    ...policiesFromFile(),
+    {
+      policyName: "solana consensus",
+      effect: "EFFECT_ALLOW",
+      consensus: "approvers.any(user, user.id == 'user-agent') && approvers.any(user, user.id == 'user-guard')",
+      condition: "activity.action == 'SIGN' && wallet.id == 'wallet-sol'",
+    },
+  ];
+  const missingSolana = auditFixture(solanaAllow);
+  const missingSolanaText = missingSolana.reasons.find((reason) => reason.code === "BACKSTOP_MISSING")?.message ?? "";
+  assert.match(missingSolanaText, /Solana devnet recipient allowlist/);
+  assert.doesNotMatch(missingSolanaText, /Base Sepolia recipient allowlist/);
+
+  const withSolanaDeny = [
+    ...solanaAllow,
+    {
+      policyName: "solana recipients",
+      effect: "EFFECT_DENY",
+      consensus: "approvers.any(user, user.id == 'user-agent')",
+      condition: "solana.tx.transfers.any(transfer, !(transfer.to in ['So11111111111111111111111111111111111111112']))",
+    },
+  ];
+  const covered = auditFixture(withSolanaDeny);
+  assert.equal(covered.ok, true, JSON.stringify(covered.reasons));
+
+  const solanaDenyDoesNotCoverBase = policiesFromFile().map((policy) =>
+    policy.policyName === "agent-guard allowlist"
+      ? { ...policy, condition: "solana.tx.transfers.count() > 0" }
+      : policy,
+  );
+  const missingBase = auditFixture(solanaDenyDoesNotCoverBase);
+  const missingBaseText = missingBase.reasons.find((reason) => reason.code === "BACKSTOP_MISSING")?.message ?? "";
+  assert.match(missingBaseText, /Base Sepolia recipient allowlist/);
+  assert.doesNotMatch(missingBaseText, /Solana devnet recipient allowlist/);
+});
+
+test("wallet mixed with private_key always errors and is not a backstop", () => {
+  const replaced = policiesFromFile().map((policy) =>
+    policy.policyName === "agent-guard export"
+      ? { ...policy, condition: "wallet.id == '' || private_key.id == ''" }
+      : policy,
+  );
+  const report = auditFixture(replaced);
+  const always = report.reasons.find((reason) => reason.code === "POLICY_ALWAYS_ERRORS");
+  assert.ok(always);
+  assert.match(always.message, /wallet and private_key/);
+  assert.match(always.message, /does not short circuit/);
+  assert.match(always.message, /not counted as a backstop/);
+  assert.match(
+    report.reasons.find((reason) => reason.code === "BACKSTOP_MISSING")?.message ?? "",
+    /private key or wallet export/,
+  );
+
+  const quoted = policiesFromFile().map((policy) =>
+    policy.policyName === "agent-guard export"
+      ? { ...policy, condition: "activity.action == 'EXPORT' && activity.type != 'wallet.id || private_key.id'" }
+      : policy,
+  );
+  const quotedReport = auditFixture(quoted);
+  assert.equal(quotedReport.reasons.some((reason) => reason.code === "POLICY_ALWAYS_ERRORS"), false);
+  assert.equal(quotedReport.ok, true, JSON.stringify(quotedReport.reasons));
 });
 
 test("a DENY backstop counts only when consensus names the agent or everyone", () => {

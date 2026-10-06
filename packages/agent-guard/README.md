@@ -70,7 +70,8 @@ M3 is the Turnkey approver adapter. The rules engine and the receipt log do not 
 - `escalate` sends neither. The activity stays pending for the owner.
 - Approve is refused until `startupCheck` passes, and until the caller sets `decisionLogged`. The same fingerprint is not approved twice.
 - `startupCheck` refuses to run when the agent can sign alone, when the approver can sign, when the two roles are the same user, when the joint consensus ALLOW is missing, or when a required DENY backstop is missing.
-- A condition that mentions two chain payloads, such as `eth.tx` and `solana.tx`, is `POLICY_ALWAYS_ERRORS`. Turnkey evaluates every clause and does not short circuit, so that policy never applies and is not counted as a backstop. A DENY counts only when its consensus names the agent user or applies to everyone (`true`, empty, or `approvers.count() >= 1`).
+- A condition that mentions two chain payloads, such as `eth.tx` and `solana.tx`, or that mentions both `wallet` and `private_key`, is `POLICY_ALWAYS_ERRORS`. Turnkey evaluates every clause and does not short circuit, so that policy never applies and is not counted as a backstop. A DENY counts only when its consensus names the agent user or applies to everyone (`true`, empty, or `approvers.count() >= 1`).
+- A recipient allowlist DENY is required for each chain that has a sign ALLOW. An Ethereum DENY does not cover a Solana ALLOW, and the reverse is also true. A chain with no sign ALLOW does not add that requirement.
 - A canary in `ACTIVITY_STATUS_CONSENSUS_NEEDED` passes. A canary in `ACTIVITY_STATUS_COMPLETED` passes only when `votes` contains `VOTE_SELECTION_APPROVED` from both the agent and the approver (`canaryVerdict` is `jointly_approved`). A completed canary with no approver approval is `agent_signed_alone`. Other statuses fail.
 - `healthcheck` passes only when whoami is the configured approver user in the configured organization. An agent API key fails that check.
 - Chains are Base Sepolia (chain id 84532) and Solana devnet only. A mainnet chain throws.
@@ -92,7 +93,7 @@ Do this in a test organization. Do not use an organization that holds mainnet fu
 6. Create policies. `mirrorBackstop` prints the JSON. The required shape is:
    - `EFFECT_ALLOW` with consensus `approvers.any(user, user.id == '<agent>') && approvers.any(user, user.id == '<approver>')` and condition `activity.action == 'SIGN'`, scoped to those wallets.
    - `EFFECT_ALLOW` for the approver limited to `ACTIVITY_TYPE_APPROVE_ACTIVITY` and `ACTIVITY_TYPE_REJECT_ACTIVITY`.
-   - `EFFECT_DENY` when the recipient is outside the allowlist, one policy per chain. Do not OR `eth.tx` with `solana.tx` (or `tron.tx`, `bitcoin.tx`, `tempo.tx`, `eth.eip_712`, or `eth.eip_7702_authorization`) in one condition. Turnkey will error that policy on every activity.
+   - `EFFECT_DENY` when the recipient is outside the allowlist, one policy per chain that has a sign ALLOW. A Solana recipient DENY does not satisfy a Base Sepolia ALLOW. Do not OR `eth.tx` with `solana.tx` (or `tron.tx`, `bitcoin.tx`, `tempo.tx`, `eth.eip_712`, or `eth.eip_7702_authorization`) in one condition, and do not OR `wallet.id` with `private_key.id`. Turnkey evaluates every clause and will error that policy on every activity.
    - Each of those DENY policies must use consensus that names the agent user, or consensus that applies to everyone (`true`). A DENY whose consensus names only the approver does not cover the agent's signature request.
    - `EFFECT_DENY` when Base Sepolia `eth.tx.value` is above the native per-transaction cap.
    - `EFFECT_DENY` when `solana.tx.address_table_lookups.count != 0`.

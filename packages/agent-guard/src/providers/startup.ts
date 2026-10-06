@@ -20,6 +20,8 @@ export interface StartupAuditInput {
   /** When the client returned users, both roles must be present. An empty list skips this. */
   userIds?: string[];
   chains: readonly string[];
+  /** Wallet ids used to see which chain a `wallet.id` ALLOW covers. */
+  wallets?: readonly { walletId: string; chain: string }[];
   canaryStatus: string | null;
   /** Votes from the canary activity. A completed canary needs an approval from the approver. */
   canaryVotes?: readonly CanaryVoteView[];
@@ -40,7 +42,9 @@ const SIGN_RAW = "ACTIVITY_TYPE_SIGN_RAW_PAYLOAD";
  * an ALLOW for signing must name both the agent and the approver.
  * A canary may stay in CONSENSUS_NEEDED, or complete only when both users approved.
  * A completed canary with no approver approval means the agent signed alone.
- * A condition that mixes chain payload namespaces always errors, because Turnkey evaluates every clause.
+ * A condition that mixes chain payload namespaces, or wallet with private_key, always errors,
+ * because Turnkey evaluates every clause.
+ * A recipient DENY is required for each chain that has a sign ALLOW.
  * A DENY counts as a backstop only when its consensus names the agent or applies to everyone.
  * This is not a full policy-language interpreter.
  */
@@ -86,8 +90,10 @@ export function auditStartup(input: StartupAuditInput): StartupAudit {
   let joint = false;
   let sawAddressTableDeny = false;
   let sawRawDeny = false;
-  let sawAllowlistDeny = false;
+  let sawEthAllowlistDeny = false;
+  let sawSolanaAllowlistDeny = false;
   let sawValueDeny = false;
+  const allowedChains = new Set<string>();
   let sawExportDeny = false;
   let sawPolicyChangeDeny = false;
   let sawUserChangeDeny = false;
@@ -95,13 +101,11 @@ export function auditStartup(input: StartupAuditInput): StartupAudit {
   for (const policy of input.policies) {
     const effect = policy.effect.trim();
     const namespaces = chainNamespacesIn(policy.condition ?? "");
-    if (namespaces.length > 1) {
+    const mixesWalletAndKey = mixesWalletAndPrivateKey(policy.condition ?? "");
+    if (namespaces.length > 1 || mixesWalletAndKey) {
       reasons.push({
         code: "POLICY_ALWAYS_ERRORS",
-        message:
-          `Policy ${label(policy)} mixes chain payload namespaces (${namespaces.join(", ")}). ` +
-          "Turnkey evaluates every clause and does not short circuit, so a clause for a payload that is not in the activity errors the whole policy. " +
-          "Split it into one policy per chain. It was not counted as a backstop.",
+        message: alwaysErrorMessage(policy, namespaces, mixesWalletAndKey),
       });
     }
     if (effect !== "EFFECT_ALLOW" && effect !== "EFFECT_DENY") {
@@ -113,13 +117,17 @@ export function auditStartup(input: StartupAuditInput): StartupAudit {
       }
       continue;
     }
-    if (namespaces.length > 1) continue;
+    if (namespaces.length > 1 || mixesWalletAndKey) continue;
+    if (effect === "EFFECT_ALLOW") {
+      for (const chain of signAllowChains(policy, input.wallets ?? [], input.chains)) allowedChains.add(chain);
+    }
     if (effect === "EFFECT_DENY") {
       if (!consensusCoversAgent(policy.consensus ?? "", agent)) continue;
       const condition = policy.condition;
       if (condition.includes("address_table_lookups")) sawAddressTableDeny = true;
       if (condition.includes(SIGN_RAW)) sawRawDeny = true;
-      if (condition.includes("eth.tx.to") || condition.includes("solana.tx.transfers")) sawAllowlistDeny = true;
+      if (condition.includes("eth.tx.to")) sawEthAllowlistDeny = true;
+      if (condition.includes("solana.tx.transfers")) sawSolanaAllowlistDeny = true;
       if (condition.includes("eth.tx.value")) sawValueDeny = true;
       if (isExportDeny(condition)) sawExportDeny = true;
       if (isPolicyChangeDeny(condition)) sawPolicyChangeDeny = true;
@@ -155,7 +163,8 @@ export function auditStartup(input: StartupAuditInput): StartupAudit {
     const wantsEvm = input.chains.length === 0 || input.chains.includes("base-sepolia");
     const wantsSolana = input.chains.length === 0 || input.chains.includes("solana-devnet");
     const missing: string[] = [];
-    if (!sawAllowlistDeny) missing.push("recipient allowlist");
+    if (allowedChains.has("base-sepolia") && !sawEthAllowlistDeny) missing.push("Base Sepolia recipient allowlist");
+    if (allowedChains.has("solana-devnet") && !sawSolanaAllowlistDeny) missing.push("Solana devnet recipient allowlist");
     if (wantsEvm && !sawValueDeny) missing.push("native value cap");
     if (wantsSolana && !sawAddressTableDeny) missing.push("Solana address table lookups");
     if (!sawRawDeny) missing.push("raw payload signing");
@@ -337,6 +346,84 @@ const CHAIN_NAMESPACES = [
 export function chainNamespacesIn(condition: string): string[] {
   const text = stripSingleQuoted(condition ?? "");
   return CHAIN_NAMESPACES.filter((namespace) => namespacePresent(text, namespace));
+}
+
+/** Turnkey cannot populate wallet and private_key on the same activity. Both keywords error the policy. */
+export function mixesWalletAndPrivateKey(condition: string): boolean {
+  const text = stripSingleQuoted(condition ?? "");
+  return keywordDot(text, "wallet") && keywordDot(text, "private_key");
+}
+
+function keywordDot(text: string, keyword: string): boolean {
+  const needle = `${keyword}.`;
+  let from = 0;
+  while (from < text.length) {
+    const at = text.indexOf(needle, from);
+    if (at < 0) return false;
+    const before = at === 0 ? "" : text.charAt(at - 1);
+    if (isNamespaceBoundary(before)) return true;
+    from = at + needle.length;
+  }
+  return false;
+}
+
+function alwaysErrorMessage(policy: PolicyView, namespaces: readonly string[], mixesWalletAndKey: boolean): string {
+  const name = label(policy);
+  if (namespaces.length > 1 && mixesWalletAndKey) {
+    return (
+      `Policy ${name} mixes chain payload namespaces (${namespaces.join(", ")}) and also mixes wallet and private_key. ` +
+      "Turnkey evaluates every clause and does not short circuit, so this policy always errors. It was not counted as a backstop."
+    );
+  }
+  if (mixesWalletAndKey) {
+    return (
+      `Policy ${name} mixes wallet and private_key. ` +
+      "Turnkey evaluates every clause and does not short circuit. An activity cannot target both a wallet and a private key, so this policy always errors. " +
+      "It was not counted as a backstop."
+    );
+  }
+  return (
+    `Policy ${name} mixes chain payload namespaces (${namespaces.join(", ")}). ` +
+    "Turnkey evaluates every clause and does not short circuit, so a clause for a payload that is not in the activity errors the whole policy. " +
+    "Split it into one policy per chain. It was not counted as a backstop."
+  );
+}
+
+/** Chains a sign ALLOW can actually sign. Approve-only ALLOWs do not count. An unscoped sign ALLOW covers every configured testnet. */
+function signAllowChains(
+  policy: PolicyView,
+  wallets: readonly { walletId: string; chain: string }[],
+  configured: readonly string[],
+): string[] {
+  if (policy.effect.trim() !== "EFFECT_ALLOW" || isApproveOnly(policy.condition ?? "")) return [];
+  const condition = policy.condition ?? "";
+  const bare = stripSingleQuoted(condition);
+  const found = new Set<string>();
+  if (
+    namespacePresent(bare, "eth.tx") ||
+    namespacePresent(bare, "eth.eip_712") ||
+    namespacePresent(bare, "eth.eip_7702_authorization") ||
+    /\b84532\b/.test(bare)
+  ) {
+    found.add("base-sepolia");
+  }
+  if (namespacePresent(bare, "solana.tx")) found.add("solana-devnet");
+  for (const wallet of wallets) {
+    if (!isTestnetChain(wallet.chain)) continue;
+    if (mentionsWalletId(condition, wallet.walletId)) found.add(wallet.chain);
+  }
+  if (found.size > 0) return [...found];
+  if (keywordDot(bare, "wallet")) return [];
+  const scope = configured.filter((chain) => isTestnetChain(chain));
+  return scope.length > 0 ? scope : ["base-sepolia", "solana-devnet"];
+}
+
+function mentionsWalletId(condition: string, walletId: string): boolean {
+  const id = walletId.trim();
+  if (id.length === 0) return false;
+  const escaped = id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`wallet\\.id\\s*==\\s*'${escaped}'`).test(condition) ||
+    new RegExp(`wallet\\.id\\s*==\\s*"${escaped}"`).test(condition);
 }
 
 function stripSingleQuoted(condition: string): string {

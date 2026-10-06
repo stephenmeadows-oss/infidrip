@@ -47,6 +47,7 @@ export function createTurnkeyAdapter(client: TurnkeyClient, config: TurnkeyAdapt
       policies,
       userIds: users.map((user) => user.userId),
       chains: chainsOf(config.wallets),
+      wallets: config.wallets,
       canaryStatus: canary?.status ?? null,
       canaryVotes: canary?.votes ?? [],
       requireBackstops: config.requireBackstops,
