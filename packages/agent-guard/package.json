@@ -2,7 +2,7 @@
   "name": "@infidrip/agent-guard",
   "version": "0.1.0",
   "private": true,
-  "description": "Agent Guard v1 rules engine and ruleset schema. Pure and deterministic. No network, no wallet keys.",
+  "description": "Agent Guard v1 rules engine, append-only receipt log, and offline verifier. No network and no wallet keys.",
   "type": "module",
   "engines": {
     "node": ">=22"
@@ -13,7 +13,8 @@
   },
   "scripts": {
     "test": "node --import tsx --test test/*.test.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "verify": "node --import tsx src/cli.ts verify"
   },
   "dependencies": {
     "@noble/ed25519": "3.2.0",

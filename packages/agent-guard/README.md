@@ -1,6 +1,6 @@
 # @infidrip/agent-guard
 
-Pure rules engine for Agent Guard v1, milestone M1.
+Rules engine and append-only receipt log for Agent Guard v1, milestones M1 and M2.
 
 Agent Guard is a non-custodial pre-sign check. A human owner sets spending caps, an allowlist of recipient addresses, and expiry. Before the owner's wallet signs a payment an agent proposes, `evaluate` returns `allow`, `deny`, or `escalate` with the rules it checked and a human-readable reason. The package does not hold wallet keys or funds, and it does not send a transaction.
 
@@ -35,8 +35,40 @@ Evaluation stops at the first failing rule. The fixed order follows the spec: sc
 - `require_price: false` does not skip USD caps. The schema requires those caps, and M1 has no owner-set worst-case USD value, so a missing price still denies.
 - The spend ledger is an input list. Persistence, reservations, and concurrency are M4. Held and committed rows inside the rolling window count. Released rows do not. The window is half-open: a spend exactly `period_seconds` old has fallen out.
 - Replay, idempotency keys, and payload decoding are later milestones. Kinds other than `native_transfer` and `token_transfer` are denied here.
-- Turnkey, the receipt log, anchoring, and the owner CLI are not in this package.
+- Turnkey calls, external anchoring, and the owner CLI are not in this package.
 - Fees are added to USD caps only when `count_fees` is true and the intent carries a fee. They are not added to base-unit caps.
+
+## What M2 covers
+
+Every ruleset activation, payment attempt, and evaluate decision can be appended to a receipt log. The log also records provider approve and reject notices, outcomes, gap markers, log key rotation, and references to earlier checkpoints. Each entry is hash-chained to the previous one and signed with a log key. Checkpoints are RFC 6962 Merkle roots over the entry hashes, signed by the log key that is active at the head. The default checkpoint policy is every 256 entries or 10 minutes, and an export always checkpoints the current head.
+
+`exportBundle` writes an in-memory bundle. `writeBundle` stores it as a directory:
+
+- `entries.jsonl` and `checkpoints.jsonl`: one canonical JSON object per line
+- `rulesets/<body_hash>.json`: ruleset body plus the detached owner signature
+- `keys.json`: log public keys, their validity windows, and the owner rules public key
+- `proof.json`: the small download a UI can keep. It carries the latest signed checkpoint, the entry count, and the checkpoint count
+
+`verifyBundle` and `verifyDirectory` recompute every hash, check every signature, rebuild every Merkle root, and run `evaluate` again on the logged inputs. A decision whose fresh result does not match the receipt is rejected. The verifier reads only the export. It does not open a socket.
+
+The log key is a test or deployment signing key for the receipt log. It is not a wallet key, and the secret is not written into the export. `provider: "turnkey"` is a label on the receipt. This package does not call Turnkey.
+
+Checkpoint signatures use `agent-guard/checkpoint/v1` concatenated with SHA-256 of the canonical checkpoint object without `sig`. Receipt signatures use `agent-guard/receipt/v1` concatenated with the raw entry hash.
+
+## Verifier limits
+
+A consistent prefix of the log, paired with an older checkpoint that was honestly signed for that prefix, looks valid on its own. Dropping entries while keeping the original `proof.json` fails. To reject a swapped older proof, pass `expectedHeadHash` from a proof the operator saved earlier. External timestamp anchoring is milestone M5. If an `anchors/` directory is present, the verifier reports that it was not checked and does not treat the log as anchored.
+
+Payload hashes are recorded as supplied by the caller. M2 does not decode transaction bytes.
+
+## Run the verifier
+
+```bash
+npm run verify -- ./path-to-bundle
+npm run verify -- ./path-to-bundle --expect-head <64-hex-chars>
+```
+
+The command prints one sentence, then the JSON report. Exit 0 means the chain checked out. Exit 1 means it did not. Exit 2 means the arguments were wrong.
 
 ## Run the tests
 

@@ -49,3 +49,47 @@ export {
   usdToMicros,
 } from "./money.js";
 export type { Decimal } from "./money.js";
+
+export { merkleRoot } from "./merkle.js";
+export { readBundle, writeBundle } from "./bundle.js";
+export type { BundleRead } from "./bundle.js";
+export { verifyBundle, verifyDirectory } from "./verify.js";
+export type { VerifyIssue, VerifyOptions, VerifyReport, VerifyStats } from "./verify.js";
+export {
+  CHECKPOINT_DOMAIN,
+  DEFAULT_CHECKPOINT_EVERY,
+  DEFAULT_CHECKPOINT_INTERVAL_MS,
+  EMPTY_PAYLOAD_HASH,
+  GENESIS_PREV_HASH,
+  PROOF_FORMAT,
+  RECEIPT_DOMAIN,
+  RECEIPT_TYPES,
+  ReceiptError,
+  checkpointSigningMessage,
+  computeEntryHash,
+  createReceiptWriter,
+  keyCovers,
+  receiptPriceSnapshot,
+  receiptSigningMessage,
+} from "./receipt.js";
+export type {
+  Checkpoint,
+  EvaluationContext,
+  InMemoryBundle,
+  KeysFile,
+  NoticeArgs,
+  OutcomeArgs,
+  PaymentLogArgs,
+  ProofFile,
+  ProviderRef,
+  PublicLogKey,
+  ReceiptContext,
+  ReceiptDecision,
+  ReceiptEntry,
+  ReceiptOutcome,
+  ReceiptSummary,
+  ReceiptType,
+  ReceiptWriter,
+  StoredRuleset,
+  WriterOptions,
+} from "./receipt.js";
