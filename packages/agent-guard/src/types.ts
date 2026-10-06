@@ -104,8 +104,8 @@ export interface LedgerState {
 }
 
 /**
- * Caller-supplied USD quote. Milestone M4 will fill this from price feeds.
- * This package does not retrieve prices.
+ * USD quote. `readPairQuote` can fill this from a PriceSource.
+ * The quote is data. This package does not retrieve prices from the network.
  */
 export interface PriceQuote {
   assetId: string;

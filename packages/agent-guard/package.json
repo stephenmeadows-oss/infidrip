@@ -2,7 +2,7 @@
   "name": "@infidrip/agent-guard",
   "version": "0.1.0",
   "private": true,
-  "description": "Agent Guard v1 rules engine, receipt log, and Turnkey approver adapter. Live Turnkey calls run only when credentials are set. No wallet keys are stored in the repo.",
+  "description": "Agent Guard v1 rules engine, receipt log, Turnkey approver adapter, and spend ledger. Price checks use a caller-supplied source. Live Turnkey calls run only when credentials are set. No wallet keys and no price API key are stored.",
   "type": "module",
   "engines": {
     "node": ">=22"
