@@ -1,0 +1,27 @@
+{
+  "activity": {
+    "id": "activity-canary",
+    "organizationId": "org-test",
+    "status": "ACTIVITY_STATUS_CONSENSUS_NEEDED",
+    "type": "ACTIVITY_TYPE_SIGN_TRANSACTION_V2",
+    "fingerprint": "fingerprint-canary",
+    "intent": {
+      "signTransactionIntentV2": {
+        "unsignedTransaction": "deadbeef"
+      }
+    },
+    "votes": [
+      {
+        "id": "vote-agent",
+        "userId": "user-agent",
+        "selection": "VOTE_SELECTION_APPROVED"
+      },
+      {
+        "id": "vote-guard",
+        "userId": "user-guard",
+        "user": { "userId": "user-guard" },
+        "selection": "VOTE_SELECTION_APPROVED"
+      }
+    ]
+  }
+}

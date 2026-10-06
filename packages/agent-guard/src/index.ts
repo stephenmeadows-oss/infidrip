@@ -93,3 +93,41 @@ export type {
   StoredRuleset,
   WriterOptions,
 } from "./receipt.js";
+
+export { applyGuardDecision } from "./providers/apply.js";
+export type { GuardDecisionInput, GuardDecisionResult } from "./providers/apply.js";
+export { buildBackstopPolicies } from "./providers/backstop.js";
+export type { BackstopInput, BackstopWallet } from "./providers/backstop.js";
+export { auditStartup, simulateCanaryStatus } from "./providers/startup.js";
+export {
+  AdapterError,
+  BASE_MAINNET_CHAIN_ID,
+  BASE_SEPOLIA_CHAIN_ID,
+  PROVIDER_CAPABILITY_PRESETS,
+  TESTNET_CHAINS,
+  commandForDecision,
+  isTestnetChain,
+} from "./providers/types.js";
+export type {
+  BackstopPlan,
+  BackstopPolicy,
+  GuardCommand,
+  ProviderAction,
+  ProviderCapabilities,
+  ProviderCommand,
+  ProviderHealth,
+  ProviderId,
+  ProviderOutcome,
+  SignerAdapter,
+  CanaryVerdict,
+  StartupReason,
+  StartupReport,
+  TestnetChainId,
+} from "./providers/types.js";
+export { createTurnkeyAdapter } from "./turnkey/adapter.js";
+export type { TurnkeyAdapterConfig } from "./turnkey/adapter.js";
+export { createMemoryTurnkeyClient, fixtureActivity } from "./turnkey/memory.js";
+export type { MemoryTurnkeyOptions } from "./turnkey/memory.js";
+export { createLiveTurnkeyClient, liveTurnkeyFromEnv } from "./turnkey/live.js";
+export type { LiveEnv, LiveTurnkeyOptions } from "./turnkey/live.js";
+export { STAMP_SCHEME, publicKeyFromPrivate, stampRequest } from "./turnkey/stamp.js";
