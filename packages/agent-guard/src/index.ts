@@ -131,3 +131,43 @@ export type { MemoryTurnkeyOptions } from "./turnkey/memory.js";
 export { createLiveTurnkeyClient, liveTurnkeyFromEnv } from "./turnkey/live.js";
 export type { LiveEnv, LiveTurnkeyOptions } from "./turnkey/live.js";
 export { STAMP_SCHEME, publicKeyFromPrivate, stampRequest } from "./turnkey/stamp.js";
+
+export {
+  CHAINLINK_BASE_ETH_USD,
+  CHAINLINK_BASE_USDC_USD,
+  CHAINLINK_ETH_SOL_USD,
+  PYTH_ETH_USD,
+  PYTH_SOL_USD,
+  PYTH_USDC_USD,
+  feedOrder,
+  pairForAsset,
+  readPairQuote,
+} from "./price/feeds.js";
+export type {
+  FeedEndpoint,
+  FeedSourceName,
+  MainnetPair,
+  PairName,
+  PriceSource,
+  SourceReading,
+} from "./price/feeds.js";
+export { PriceFeedError, createLivePriceSource, createMockPriceSource } from "./price/mock.js";
+export type { MockPriceSource } from "./price/mock.js";
+
+export { DEDUPE_WINDOW_SECONDS, GuardReason, checkPayment } from "./guard/check.js";
+export type {
+  DecisionLog,
+  DecisionLogEntry,
+  GuardCheck,
+  GuardInput,
+  GuardReasonCode,
+  GuardServices,
+} from "./guard/check.js";
+export {
+  RESERVATION_TTL_SECONDS,
+  LedgerError,
+  applyOutcome,
+  createMemoryLedger,
+} from "./guard/ledger.js";
+export type { Reservation, SpendLedger, StoredAttempt } from "./guard/ledger.js";
+export { receiptDecisionLog } from "./guard/log.js";

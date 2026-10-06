@@ -1,6 +1,6 @@
 # @infidrip/agent-guard
 
-Rules engine and append-only receipt log for Agent Guard v1, milestones M1 and M2.
+Rules engine, receipt log, Turnkey approver, and spend ledger for Agent Guard v1.
 
 Agent Guard is a non-custodial pre-sign check. A human owner sets spending caps, an allowlist of recipient addresses, and expiry. Before the owner's wallet signs a payment an agent proposes, `evaluate` returns `allow`, `deny`, or `escalate` with the rules it checked and a human-readable reason. The package does not hold wallet keys or funds, and it does not send a transaction.
 
@@ -31,12 +31,11 @@ Evaluation stops at the first failing rule. The fixed order follows the spec: sc
 
 ## Stubbed for later milestones
 
-- Price feeds are not fetched. Pass a `PriceQuote` per asset. If a USD cap needs a price and none is supplied, the decision is `deny` with `PRICE_UNAVAILABLE`. Chainlink, Pyth, staleness policy, and two-source checks are M4. A second quote is enforced only when the caller supplies one. `PriceQuote.isStable` turns on the depeg band; the ruleset schema has no `is_stable` field.
-- `require_price: false` does not skip USD caps. The schema requires those caps, and M1 has no owner-set worst-case USD value, so a missing price still denies.
-- The spend ledger is an input list. Persistence, reservations, and concurrency are M4. Held and committed rows inside the rolling window count. Released rows do not. The window is half-open: a spend exactly `period_seconds` old has fallen out.
-- Replay, idempotency keys, and payload decoding are later milestones. Kinds other than `native_transfer` and `token_transfer` are denied here.
-- External anchoring and the owner CLI are not in this package. The Turnkey adapter is milestone M3.
-- Fees are added to USD caps only when `count_fees` is true and the intent carries a fee. They are not added to base-unit caps.
+- `evaluate` does not retrieve prices. Pass a `PriceQuote`, or call `checkPayment` with a `PriceSource`. A second quote is enforced only when one is present. `PriceQuote.isStable` turns on the depeg band. The ruleset schema has no `is_stable` field.
+- `require_price: false` does not skip USD caps. The schema requires those caps, and there is no owner-set worst-case USD value, so a missing price still denies.
+- `evaluate` still takes the spend ledger as a list. Held and committed rows inside the rolling window count. Released rows do not. The window is half-open: a spend exactly `period_seconds` old has fallen out. Reservations are applied by `checkPayment`.
+- Payload decoding is not in this package. Kinds other than `native_transfer` and `token_transfer` are denied. Fees are added to USD caps only when `count_fees` is true and the intent carries a fee. They are not added to base-unit caps.
+- External anchoring and the owner CLI are milestone M5.
 
 ## What M2 covers
 
@@ -80,6 +79,21 @@ M3 is the Turnkey approver adapter. The rules engine and the receipt log do not 
 Unit tests use an in-memory Turnkey client and JSON fixtures. They do not open a socket. The live test is skipped unless `TURNKEY_ORG_ID` and `TURNKEY_API_KEY` are set. Even then it only calls whoami and the startup check. It does not approve, reject, or broadcast.
 
 The in-memory canary is a fixture: if any ALLOW lets the agent sign without the approver, the canary status is `ACTIVITY_STATUS_COMPLETED` and the only vote is the agent's approval. The live client never submits a signature request. John records a manual 0-value canary and passes its activity id. The audit reads that activity's `votes` array.
+
+## What M4 covers
+
+`checkPayment` runs the pre-sign check around `evaluate`. It reads two prices, reserves the spend, and writes the decision log before the caller may approve (`mayApprove`).
+
+- Testnet assets use mainnet ETH/USD, USDC/USD, and SOL/USD pairs. Base assets use Chainlink as the primary source and Pyth as the cross-check. Solana assets do the reverse. A `price_feed_id` prefix overrides that order. The catalog stores public Chainlink proxy addresses and public Pyth feed ids. Those values are not secrets.
+- This package does not call Chainlink or Pyth. Tests use `createMockPriceSource`. `createLivePriceSource` is a stub that always throws. A live Pyth Hermes client would need `PYTH_API_KEY` (Bearer token, required since 2026-08-26). That variable is not read and no key is stored. A live Chainlink read needs no API key. It would also dial a mainnet RPC, which this package does not do.
+- Both sources are required. Staleness, source deviation, and the stablecoin depeg band are the checks `evaluate` already applies. A killed feed, a missing quote, or a thrown read becomes `PRICE_UNAVAILABLE`, and nothing is reserved.
+- The spend ledger holds a reservation on allow. Held rows count until they expire (default 300 seconds), are released, or are committed. Committed rows keep counting until they leave the rolling window. Released rows do not. Evaluation and the reservation for one agent run under one lock, so two parallel payments cannot both fit a cap that only has room for one.
+- The same fingerprint and payload returns the prior decision and does not reserve again. `mayApprove` stays true until `markApproved`, so a failed approve can be retried. A different payload for that fingerprint is `REPLAY`. The same idempotency key with a different payload is `IDEMPOTENCY_CONFLICT`. With a key, the first logged decision sticks. Without a key, a price or cap deny does not stick.
+- Base Sepolia must carry chain id 84532. Chain id 8453 and the chain names `base` and `solana` are refused. Solana devnet must carry a recent blockhash, which is recorded. A shared blockhash on a different payload is allowed. The same payload hash is not decided twice. An approved nonce is not approved again.
+- On-chain decimals are compared with the pinned asset and with the payment. A failed read is `DECIMALS_MISMATCH`. Per-asset caps stay in base units. The aggregate period cap is USD across assets and includes held reservations.
+- Fail closed: a stopped guard, a killed ledger, a killed price feed, and a log write failure all deny. A log failure releases the reservation. The caller must not approve unless `mayApprove` is true.
+- Dedupe is off unless `dedupeWindowSeconds` is set. The same recipient, asset, and amount inside that window escalates and does not reserve.
+- `receiptDecisionLog` writes an evaluate result as an attempt plus a decision, using the ledger from before the new hold, so the offline verifier recomputes the same result. Guard-level denies are attempts only. A decision receipt is re-derived by `evaluate`, which does not see replay, chain id, or on-chain decimals.
 
 ## Turnkey setup for John
 
