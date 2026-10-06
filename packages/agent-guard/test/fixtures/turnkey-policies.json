@@ -1,0 +1,44 @@
+[
+  {
+    "policyName": "agent-guard consensus",
+    "effect": "EFFECT_ALLOW",
+    "consensus": "approvers.any(user, user.id == 'user-agent') && approvers.any(user, user.id == 'user-guard')",
+    "condition": "activity.action == 'SIGN' && wallet.id == 'wallet-base'",
+    "notes": "Both the agent and the guard approver."
+  },
+  {
+    "policyName": "agent-guard approver",
+    "effect": "EFFECT_ALLOW",
+    "consensus": "approvers.any(user, user.id == 'user-guard')",
+    "condition": "activity.type in ['ACTIVITY_TYPE_APPROVE_ACTIVITY', 'ACTIVITY_TYPE_REJECT_ACTIVITY']",
+    "notes": "Approve and reject only."
+  },
+  {
+    "policyName": "agent-guard allowlist",
+    "effect": "EFFECT_DENY",
+    "consensus": "approvers.any(user, user.id == 'user-agent')",
+    "condition": "eth.tx.chain_id == 84532 && !(eth.tx.to in ['0x1111111111111111111111111111111111111111'])",
+    "notes": "Allowlist backstop."
+  },
+  {
+    "policyName": "agent-guard value",
+    "effect": "EFFECT_DENY",
+    "consensus": "approvers.any(user, user.id == 'user-agent')",
+    "condition": "eth.tx.chain_id == 84532 && eth.tx.value > 2000000000000000",
+    "notes": "Native cap backstop."
+  },
+  {
+    "policyName": "agent-guard address tables",
+    "effect": "EFFECT_DENY",
+    "consensus": "approvers.any(user, user.id == 'user-agent')",
+    "condition": "solana.tx.address_table_lookups.count != 0",
+    "notes": "Hidden recipient backstop."
+  },
+  {
+    "policyName": "agent-guard raw payload",
+    "effect": "EFFECT_DENY",
+    "consensus": "approvers.any(user, user.id == 'user-agent')",
+    "condition": "activity.type in ['ACTIVITY_TYPE_SIGN_RAW_PAYLOAD', 'ACTIVITY_TYPE_SIGN_RAW_PAYLOAD_V2']",
+    "notes": "No raw payload signing."
+  }
+]
