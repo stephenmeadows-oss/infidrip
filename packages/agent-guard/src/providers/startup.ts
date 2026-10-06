@@ -40,6 +40,8 @@ const SIGN_RAW = "ACTIVITY_TYPE_SIGN_RAW_PAYLOAD";
  * an ALLOW for signing must name both the agent and the approver.
  * A canary may stay in CONSENSUS_NEEDED, or complete only when both users approved.
  * A completed canary with no approver approval means the agent signed alone.
+ * A condition that mixes chain payload namespaces always errors, because Turnkey evaluates every clause.
+ * A DENY counts as a backstop only when its consensus names the agent or applies to everyone.
  * This is not a full policy-language interpreter.
  */
 export function auditStartup(input: StartupAuditInput): StartupAudit {
@@ -92,6 +94,16 @@ export function auditStartup(input: StartupAuditInput): StartupAudit {
 
   for (const policy of input.policies) {
     const effect = policy.effect.trim();
+    const namespaces = chainNamespacesIn(policy.condition ?? "");
+    if (namespaces.length > 1) {
+      reasons.push({
+        code: "POLICY_ALWAYS_ERRORS",
+        message:
+          `Policy ${label(policy)} mixes chain payload namespaces (${namespaces.join(", ")}). ` +
+          "Turnkey evaluates every clause and does not short circuit, so a clause for a payload that is not in the activity errors the whole policy. " +
+          "Split it into one policy per chain. It was not counted as a backstop.",
+      });
+    }
     if (effect !== "EFFECT_ALLOW" && effect !== "EFFECT_DENY") {
       if (policyMentions(policy, agent) || policyMentions(policy, approver)) {
         reasons.push({
@@ -101,7 +113,9 @@ export function auditStartup(input: StartupAuditInput): StartupAudit {
       }
       continue;
     }
+    if (namespaces.length > 1) continue;
     if (effect === "EFFECT_DENY") {
+      if (!consensusCoversAgent(policy.consensus ?? "", agent)) continue;
       const condition = policy.condition;
       if (condition.includes("address_table_lookups")) sawAddressTableDeny = true;
       if (condition.includes(SIGN_RAW)) sawRawDeny = true;
@@ -304,6 +318,52 @@ function isApproveOnly(condition: string): boolean {
   if (text.includes("activity.action == 'SIGN'") || text.includes('activity.action == "SIGN"')) return false;
   if (text.includes("ACTIVITY_TYPE_SIGN")) return false;
   return text.includes("ACTIVITY_TYPE_APPROVE_ACTIVITY") || text.includes("ACTIVITY_TYPE_REJECT_ACTIVITY");
+}
+
+/**
+ * Payload keywords from the Turnkey condition table. Each is present for only one
+ * activity shape, so two of them in one condition make every evaluation error.
+ */
+const CHAIN_NAMESPACES = [
+  "eth.eip_7702_authorization",
+  "eth.eip_712",
+  "eth.tx",
+  "solana.tx",
+  "tron.tx",
+  "bitcoin.tx",
+  "tempo.tx",
+] as const;
+
+export function chainNamespacesIn(condition: string): string[] {
+  const text = stripSingleQuoted(condition ?? "");
+  return CHAIN_NAMESPACES.filter((namespace) => namespacePresent(text, namespace));
+}
+
+function stripSingleQuoted(condition: string): string {
+  return condition.replace(/'(?:\\.|[^'])*'/g, "''");
+}
+
+function namespacePresent(text: string, namespace: string): boolean {
+  let from = 0;
+  while (from < text.length) {
+    const at = text.indexOf(namespace, from);
+    if (at < 0) return false;
+    const before = at === 0 ? "" : text.charAt(at - 1);
+    const after = text.charAt(at + namespace.length);
+    if (isNamespaceBoundary(before) && isNamespaceBoundary(after)) return true;
+    from = at + namespace.length;
+  }
+  return false;
+}
+
+function isNamespaceBoundary(char: string): boolean {
+  return char.length === 0 || /[^A-Za-z0-9_]/.test(char);
+}
+
+/** A DENY applies to the agent's sign request when consensus names that user, or when it applies to everyone. */
+function consensusCoversAgent(consensus: string, agentUserId: string): boolean {
+  if (isBroadConsensus(consensus)) return true;
+  return mentions(consensus, agentUserId);
 }
 
 function isBroadConsensus(consensus: string): boolean {

@@ -128,7 +128,8 @@ export interface StartupReason {
     | "MAINNET_CHAIN"
     | "AGENT_MISSING"
     | "APPROVER_MISSING"
-    | "POLICY_UNREADABLE";
+    | "POLICY_UNREADABLE"
+    | "POLICY_ALWAYS_ERRORS";
   message: string;
 }
 
