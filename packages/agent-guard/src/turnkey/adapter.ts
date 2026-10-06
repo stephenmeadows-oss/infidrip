@@ -48,11 +48,17 @@ export function createTurnkeyAdapter(client: TurnkeyClient, config: TurnkeyAdapt
       userIds: users.map((user) => user.userId),
       chains: chainsOf(config.wallets),
       canaryStatus: canary?.status ?? null,
+      canaryVotes: canary?.votes ?? [],
       requireBackstops: config.requireBackstops,
       requireCanary: config.requireCanary,
     });
     ready = audit.ok;
-    return { ok: audit.ok, reasons: audit.reasons, canaryStatus: canary?.status ?? null };
+    return {
+      ok: audit.ok,
+      reasons: audit.reasons,
+      canaryStatus: canary?.status ?? null,
+      canaryVerdict: audit.canaryVerdict,
+    };
   }
 
   function assertReady(): void {
@@ -127,14 +133,43 @@ export function createTurnkeyAdapter(client: TurnkeyClient, config: TurnkeyAdapt
     },
     async healthcheck() {
       const identity = await client.whoami();
-      const match = identity.organizationId === config.organizationId;
+      const orgMatch = identity.organizationId === config.organizationId;
+      const userId = identity.userId;
+      if (userId !== null && userId === config.agentUserId) {
+        return {
+          ok: false,
+          provider: "turnkey" as const,
+          organizationId: identity.organizationId,
+          userId,
+          message:
+            "Turnkey whoami authenticated as the agent user. TURNKEY_API_KEY must be the approver user's API key. Do not use the agent key for the guard.",
+        };
+      }
+      if (!orgMatch) {
+        return {
+          ok: false,
+          provider: "turnkey" as const,
+          organizationId: identity.organizationId,
+          userId,
+          message: "Turnkey whoami did not match the configured organization.",
+        };
+      }
+      if (userId !== config.approverUserId) {
+        return {
+          ok: false,
+          provider: "turnkey" as const,
+          organizationId: identity.organizationId,
+          userId,
+          message:
+            "Turnkey whoami did not authenticate as the configured approver user. TURNKEY_API_KEY must be that approver's API key.",
+        };
+      }
       return {
-        ok: match,
+        ok: true,
         provider: "turnkey" as const,
         organizationId: identity.organizationId,
-        message: match
-          ? "Turnkey whoami matched the configured organization."
-          : "Turnkey whoami did not match the configured organization.",
+        userId,
+        message: "Turnkey whoami matched the configured organization and approver user.",
       };
     },
     startupCheck,

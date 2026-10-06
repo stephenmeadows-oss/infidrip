@@ -40,5 +40,19 @@
     "consensus": "approvers.any(user, user.id == 'user-agent')",
     "condition": "activity.type in ['ACTIVITY_TYPE_SIGN_RAW_PAYLOAD', 'ACTIVITY_TYPE_SIGN_RAW_PAYLOAD_V2']",
     "notes": "No raw payload signing."
+  },
+  {
+    "policyName": "agent-guard export",
+    "effect": "EFFECT_DENY",
+    "consensus": "true",
+    "condition": "activity.action == 'EXPORT'",
+    "notes": "No private key or wallet export."
+  },
+  {
+    "policyName": "agent-guard governance",
+    "effect": "EFFECT_DENY",
+    "consensus": "true",
+    "condition": "activity.resource in ['POLICY', 'USER', 'CREDENTIAL'] && activity.action in ['CREATE', 'UPDATE', 'DELETE']",
+    "notes": "No user, credential, or policy changes."
   }
 ]

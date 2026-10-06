@@ -20,10 +20,14 @@ test("live Turnkey whoami and startup check", { skip: !live }, async () => {
   const health = await adapter.healthcheck();
   assert.equal(health.ok, true, health.message);
   assert.equal(health.organizationId, org);
+  assert.equal(health.userId, env.approverUserId, health.message);
   const report = await adapter.startupCheck();
   if (process.env.TURNKEY_EXPECT_READY === "1") {
     assert.equal(report.ok, true, JSON.stringify(report.reasons));
-    assert.equal(report.canaryStatus, "ACTIVITY_STATUS_CONSENSUS_NEEDED");
+    assert.ok(
+      report.canaryVerdict === "consensus_needed" || report.canaryVerdict === "jointly_approved",
+      `${report.canaryStatus} ${report.canaryVerdict}`,
+    );
   } else {
     assert.equal(Array.isArray(report.reasons), true);
   }

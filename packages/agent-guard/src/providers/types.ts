@@ -110,6 +110,8 @@ export interface ProviderHealth {
   ok: boolean;
   provider: ProviderId;
   organizationId: string | null;
+  /** Authenticated Turnkey user, when whoami returned one. */
+  userId: string | null;
   message: string;
 }
 
@@ -130,10 +132,23 @@ export interface StartupReason {
   message: string;
 }
 
+/**
+ * `consensus_needed` is a pending canary.
+ * `jointly_approved` is a completed canary that has approval votes from both the agent and the approver.
+ * `agent_signed_alone` is a completed canary with no approver approval.
+ */
+export type CanaryVerdict =
+  | "not_run"
+  | "consensus_needed"
+  | "jointly_approved"
+  | "agent_signed_alone"
+  | "not_consensus";
+
 export interface StartupReport {
   ok: boolean;
   reasons: StartupReason[];
   canaryStatus: string | null;
+  canaryVerdict: CanaryVerdict;
 }
 
 export interface BackstopPolicy {

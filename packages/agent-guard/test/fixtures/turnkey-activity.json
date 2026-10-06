@@ -9,6 +9,19 @@
       "signTransactionIntentV2": {
         "unsignedTransaction": "deadbeef"
       }
-    }
+    },
+    "votes": [
+      {
+        "id": "vote-agent",
+        "userId": "user-agent",
+        "selection": "VOTE_SELECTION_APPROVED"
+      },
+      {
+        "id": "vote-guard",
+        "userId": "user-guard",
+        "user": { "userId": "user-guard" },
+        "selection": "VOTE_SELECTION_APPROVED"
+      }
+    ]
   }
 }

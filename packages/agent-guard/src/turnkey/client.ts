@@ -18,6 +18,12 @@ export interface TurnkeyUser {
   userTags: string[];
 }
 
+/** One consensus vote. Turnkey documents `userId` and `selection` on each entry of `votes`. */
+export interface TurnkeyVote {
+  userId: string;
+  selection: string;
+}
+
 export interface TurnkeyActivity {
   id: string;
   status: string;
@@ -27,6 +33,7 @@ export interface TurnkeyActivity {
   intent: unknown;
   unsignedTransactionHex: string | null;
   payloadHash: string | null;
+  votes: TurnkeyVote[];
 }
 
 export interface TurnkeyIdentity {
@@ -89,6 +96,7 @@ export function normalizeActivity(value: unknown): TurnkeyActivity | null {
     intent: record.intent ?? null,
     unsignedTransactionHex: hex,
     payloadHash: hex ? hashHexPayload(hex) : null,
+    votes: normalizeVotes(record.votes),
   };
 }
 
@@ -105,6 +113,28 @@ export function hashHexPayload(hex: string): string | null {
   const stripped = hex.startsWith("0x") || hex.startsWith("0X") ? hex.slice(2) : hex;
   if (stripped.length === 0 || stripped.length % 2 !== 0 || !/^[0-9a-fA-F]+$/.test(stripped)) return null;
   return bytesToHex(sha256(hexToBytes(stripped.toLowerCase())));
+}
+
+function normalizeVotes(value: unknown): TurnkeyVote[] {
+  if (!Array.isArray(value)) return [];
+  const votes: TurnkeyVote[] = [];
+  for (const item of value) {
+    if (!isRecord(item)) continue;
+    const userId = voteUserId(item);
+    const selection = typeof item.selection === "string" ? item.selection.trim() : "";
+    if (!userId || selection.length === 0) continue;
+    votes.push({ userId, selection });
+  }
+  return votes;
+}
+
+/** Prefer the documented top-level userId. Fall back to the nested user object from the same schema. */
+function voteUserId(vote: Record<string, unknown>): string | null {
+  if (typeof vote.userId === "string" && vote.userId.trim().length > 0) return vote.userId.trim();
+  if (isRecord(vote.user) && typeof vote.user.userId === "string" && vote.user.userId.trim().length > 0) {
+    return vote.user.userId.trim();
+  }
+  return null;
 }
 
 function unwrapActivity(value: unknown): Record<string, unknown> | null {

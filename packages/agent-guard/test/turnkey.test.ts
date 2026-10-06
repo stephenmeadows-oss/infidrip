@@ -46,7 +46,10 @@ function wallets() {
   ];
 }
 
-function adapterFor(policies: TurnkeyPolicy[], extra?: { canaryStatus?: string | null }) {
+function adapterFor(
+  policies: TurnkeyPolicy[],
+  extra?: { canaryStatus?: string | null; canaryVotes?: { userId: string; selection: string }[] },
+) {
   const activity = fixtureActivity();
   const client = createMemoryTurnkeyClient({
     organizationId: "org-test",
@@ -55,6 +58,7 @@ function adapterFor(policies: TurnkeyPolicy[], extra?: { canaryStatus?: string |
     policies,
     activities: [activity],
     canaryStatus: extra?.canaryStatus,
+    canaryVotes: extra?.canaryVotes,
   });
   const adapter = createTurnkeyAdapter(client, {
     organizationId: "org-test",
@@ -93,11 +97,25 @@ test("a safe policy fixture passes startup and maps decisions", async () => {
   const report = await adapter.startupCheck();
   assert.equal(report.ok, true, JSON.stringify(report.reasons));
   assert.equal(report.canaryStatus, "ACTIVITY_STATUS_CONSENSUS_NEEDED");
+  assert.equal(report.canaryVerdict, "consensus_needed");
+  const health = await adapter.healthcheck();
+  assert.equal(health.ok, true, health.message);
+  assert.equal(health.userId, GUARD_USER);
 
   const loaded = JSON.parse(readFileSync(join(root, "test", "fixtures", "turnkey-activity.json"), "utf8")) as unknown;
   const parsed = normalizeActivity(loaded);
   assert.equal(parsed?.status, "ACTIVITY_STATUS_CONSENSUS_NEEDED");
   assert.equal(parsed?.payloadHash, hashHexPayload("deadbeef"));
+  assert.deepEqual(parsed?.votes, [
+    { userId: "user-agent", selection: "VOTE_SELECTION_APPROVED" },
+    { userId: "user-guard", selection: "VOTE_SELECTION_APPROVED" },
+  ]);
+  const nested = normalizeActivity({
+    id: "nested-vote",
+    status: "ACTIVITY_STATUS_COMPLETED",
+    votes: [{ selection: "VOTE_SELECTION_APPROVED", user: { userId: " user-guard " } }, { selection: "" }],
+  });
+  assert.deepEqual(nested?.votes, [{ userId: "user-guard", selection: "VOTE_SELECTION_APPROVED" }]);
 
   const pending = await adapter.listPending();
   assert.equal(pending.length, 1);
@@ -221,8 +239,11 @@ test("startup refuses an agent who can sign alone", async () => {
   const report = await adapter.startupCheck();
   assert.equal(report.ok, false);
   assert.equal(report.canaryStatus, "ACTIVITY_STATUS_COMPLETED");
+  assert.equal(report.canaryVerdict, "agent_signed_alone");
   assert.equal(report.reasons.some((reason) => reason.code === "AGENT_CAN_SIGN_ALONE"), true);
-  assert.equal(report.reasons.some((reason) => reason.code === "CANARY_SIGNED"), true);
+  const signed = report.reasons.find((reason) => reason.code === "CANARY_SIGNED");
+  assert.ok(signed);
+  assert.match(signed.message, /without an approval vote from the guard approver/);
   await assert.rejects(
     () => adapter.approve({ activity_id: activity.id, fingerprint: activity.fingerprint }, "decision-x"),
     /Startup check has not passed/,
@@ -264,6 +285,109 @@ test("startup refuses an agent who can sign alone", async () => {
   assert.equal(approverSigns.reasons.some((reason) => reason.code === "APPROVER_CAN_SIGN_ALONE"), true);
 });
 
+test("a completed canary passes only when the approver also approved", async () => {
+  const both = [
+    { userId: AGENT_USER, selection: "VOTE_SELECTION_APPROVED" },
+    { userId: GUARD_USER, selection: "VOTE_SELECTION_APPROVED" },
+  ];
+  const joint = adapterFor(policiesFromFile(), {
+    canaryStatus: "ACTIVITY_STATUS_COMPLETED",
+    canaryVotes: both,
+  });
+  const passed = await joint.adapter.startupCheck();
+  assert.equal(passed.ok, true, JSON.stringify(passed.reasons));
+  assert.equal(passed.canaryStatus, "ACTIVITY_STATUS_COMPLETED");
+  assert.equal(passed.canaryVerdict, "jointly_approved");
+
+  const base = {
+    agentUserId: AGENT_USER,
+    approverUserId: GUARD_USER,
+    policies: policiesFromFile(),
+    chains: ["base-sepolia", "solana-devnet"],
+    canaryStatus: "ACTIVITY_STATUS_COMPLETED",
+  };
+  const alone = auditStartup({
+    ...base,
+    canaryVotes: [{ userId: AGENT_USER, selection: "VOTE_SELECTION_APPROVED" }],
+  });
+  assert.equal(alone.ok, false);
+  assert.equal(alone.canaryVerdict, "agent_signed_alone");
+  assert.match(
+    alone.reasons.find((reason) => reason.code === "CANARY_SIGNED")?.message ?? "",
+    /without an approval vote from the guard approver/,
+  );
+
+  const approverOnly = auditStartup({
+    ...base,
+    canaryVotes: [{ userId: GUARD_USER, selection: "VOTE_SELECTION_APPROVED" }],
+  });
+  assert.equal(approverOnly.canaryVerdict, "not_consensus");
+  assert.equal(approverOnly.reasons.some((reason) => reason.code === "CANARY_SIGNED"), false);
+  assert.match(
+    approverOnly.reasons.find((reason) => reason.code === "CANARY_NOT_CONSENSUS")?.message ?? "",
+    /no approval vote from the agent/,
+  );
+
+  const rejected = auditStartup({
+    ...base,
+    canaryVotes: [
+      { userId: AGENT_USER, selection: "VOTE_SELECTION_APPROVED" },
+      { userId: GUARD_USER, selection: "VOTE_SELECTION_REJECTED" },
+    ],
+  });
+  assert.equal(rejected.canaryVerdict, "agent_signed_alone");
+
+  const failed = auditStartup({
+    ...base,
+    canaryStatus: "ACTIVITY_STATUS_FAILED",
+    canaryVotes: both,
+  });
+  assert.equal(failed.canaryVerdict, "not_consensus");
+  assert.equal(failed.reasons.some((reason) => reason.code === "CANARY_NOT_CONSENSUS"), true);
+  assert.equal(failed.reasons.some((reason) => reason.code === "CANARY_SIGNED"), false);
+});
+
+test("healthcheck refuses the agent API key", async () => {
+  const { client } = adapterFor(policiesFromFile());
+  const agentAdapter = createTurnkeyAdapter(
+    {
+      ...client,
+      async whoami() {
+        return { organizationId: "org-test", userId: AGENT_USER, username: "agent" };
+      },
+    },
+    {
+      organizationId: "org-test",
+      agentUserId: AGENT_USER,
+      approverUserId: GUARD_USER,
+      wallets: wallets(),
+    },
+  );
+  const health = await agentAdapter.healthcheck();
+  assert.equal(health.ok, false);
+  assert.equal(health.userId, AGENT_USER);
+  assert.match(health.message, /agent user/);
+  assert.match(health.message, /approver user's API key/);
+});
+
+test("startup requires export and user or policy change denials", () => {
+  const policies = policiesFromFile().filter(
+    (policy) => policy.policyName !== "agent-guard export" && policy.policyName !== "agent-guard governance",
+  );
+  const report = auditStartup({
+    agentUserId: AGENT_USER,
+    approverUserId: GUARD_USER,
+    policies,
+    chains: ["base-sepolia", "solana-devnet"],
+    canaryStatus: "ACTIVITY_STATUS_CONSENSUS_NEEDED",
+  });
+  const missing = report.reasons.find((reason) => reason.code === "BACKSTOP_MISSING");
+  assert.ok(missing);
+  assert.match(missing.message, /private key or wallet export/);
+  assert.match(missing.message, /policy changes/);
+  assert.match(missing.message, /user or credential changes/);
+});
+
 test("backstop policies stay on testnet and can be applied to the fixture", async () => {
   const ruleset = makeRuleset();
   const policies = buildBackstopPolicies({
@@ -278,6 +402,8 @@ test("backstop policies stay on testnet and can be applied to the fixture", asyn
   assert.match(joined, new RegExp(String(BASE_SEPOLIA_CHAIN_ID)));
   assert.match(joined, /address_table_lookups/);
   assert.match(joined, /ACTIVITY_TYPE_SIGN_RAW_PAYLOAD/);
+  assert.match(joined, /activity\.action == 'EXPORT'/);
+  assert.match(joined, /'POLICY', 'USER', 'CREDENTIAL'/);
   assert.equal(policies.some((policy) => policy.effect === "EFFECT_ALLOW" && policy.consensus.includes("&&")), true);
 
   const { adapter, client } = adapterFor(policiesFromFile());

@@ -119,6 +119,7 @@ export type {
   ProviderId,
   ProviderOutcome,
   SignerAdapter,
+  CanaryVerdict,
   StartupReason,
   StartupReport,
   TestnetChainId,

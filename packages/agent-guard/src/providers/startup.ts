@@ -1,4 +1,4 @@
-import type { StartupReason, TestnetChainId } from "./types.js";
+import type { CanaryVerdict, StartupReason, TestnetChainId } from "./types.js";
 import { isTestnetChain } from "./types.js";
 
 export interface PolicyView {
@@ -6,6 +6,11 @@ export interface PolicyView {
   effect: string;
   consensus: string;
   condition: string;
+}
+
+export interface CanaryVoteView {
+  userId: string;
+  selection: string;
 }
 
 export interface StartupAuditInput {
@@ -16,6 +21,8 @@ export interface StartupAuditInput {
   userIds?: string[];
   chains: readonly string[];
   canaryStatus: string | null;
+  /** Votes from the canary activity. A completed canary needs an approval from the approver. */
+  canaryVotes?: readonly CanaryVoteView[];
   requireBackstops?: boolean;
   requireCanary?: boolean;
 }
@@ -23,14 +30,16 @@ export interface StartupAuditInput {
 export interface StartupAudit {
   ok: boolean;
   reasons: StartupReason[];
+  canaryVerdict: CanaryVerdict;
 }
 
 const SIGN_RAW = "ACTIVITY_TYPE_SIGN_RAW_PAYLOAD";
 
 /**
  * Pure check of the documented Turnkey shape:
- * an ALLOW for signing must name both the agent and the approver,
- * and a canary sign must sit in CONSENSUS_NEEDED rather than complete.
+ * an ALLOW for signing must name both the agent and the approver.
+ * A canary may stay in CONSENSUS_NEEDED, or complete only when both users approved.
+ * A completed canary with no approver approval means the agent signed alone.
  * This is not a full policy-language interpreter.
  */
 export function auditStartup(input: StartupAuditInput): StartupAudit {
@@ -77,6 +86,9 @@ export function auditStartup(input: StartupAuditInput): StartupAudit {
   let sawRawDeny = false;
   let sawAllowlistDeny = false;
   let sawValueDeny = false;
+  let sawExportDeny = false;
+  let sawPolicyChangeDeny = false;
+  let sawUserChangeDeny = false;
 
   for (const policy of input.policies) {
     const effect = policy.effect.trim();
@@ -95,6 +107,9 @@ export function auditStartup(input: StartupAuditInput): StartupAudit {
       if (condition.includes(SIGN_RAW)) sawRawDeny = true;
       if (condition.includes("eth.tx.to") || condition.includes("solana.tx.transfers")) sawAllowlistDeny = true;
       if (condition.includes("eth.tx.value")) sawValueDeny = true;
+      if (isExportDeny(condition)) sawExportDeny = true;
+      if (isPolicyChangeDeny(condition)) sawPolicyChangeDeny = true;
+      if (isUserChangeDeny(condition)) sawUserChangeDeny = true;
       continue;
     }
     if (isApproveOnly(policy.condition)) continue;
@@ -130,6 +145,9 @@ export function auditStartup(input: StartupAuditInput): StartupAudit {
     if (wantsEvm && !sawValueDeny) missing.push("native value cap");
     if (wantsSolana && !sawAddressTableDeny) missing.push("Solana address table lookups");
     if (!sawRawDeny) missing.push("raw payload signing");
+    if (!sawExportDeny) missing.push("private key or wallet export");
+    if (!sawPolicyChangeDeny) missing.push("policy changes");
+    if (!sawUserChangeDeny) missing.push("user or credential changes");
     if (missing.length > 0) {
       reasons.push({
         code: "BACKSTOP_MISSING",
@@ -138,27 +156,69 @@ export function auditStartup(input: StartupAuditInput): StartupAudit {
     }
   }
 
+  const canaryVerdict = classifyCanary(input.canaryStatus, input.canaryVotes ?? [], agent, approver);
   if (requireCanary) {
-    if (input.canaryStatus === null) {
+    if (canaryVerdict === "not_run") {
       reasons.push({
         code: "CANARY_NOT_RUN",
         message:
-          "No canary activity was supplied. Submit a 0-value testnet transfer as the agent and confirm it stays in ACTIVITY_STATUS_CONSENSUS_NEEDED.",
+          "No canary activity was supplied. Submit a 0-value testnet transfer as the agent. It must stay in ACTIVITY_STATUS_CONSENSUS_NEEDED, or complete with approval votes from both the agent and the guard approver.",
       });
-    } else if (input.canaryStatus === "ACTIVITY_STATUS_COMPLETED") {
+    } else if (canaryVerdict === "agent_signed_alone") {
       reasons.push({
         code: "CANARY_SIGNED",
-        message: "The canary activity completed. The agent was able to sign without the guard.",
+        message:
+          "The canary activity completed without an approval vote from the guard approver. The agent was able to sign without the guard.",
       });
-    } else if (input.canaryStatus !== "ACTIVITY_STATUS_CONSENSUS_NEEDED") {
+    } else if (canaryVerdict === "not_consensus") {
       reasons.push({
         code: "CANARY_NOT_CONSENSUS",
-        message: `The canary status is ${input.canaryStatus}. The only passing status is ACTIVITY_STATUS_CONSENSUS_NEEDED.`,
+        message: canaryStatusMessage(input.canaryStatus, input.canaryVotes ?? [], agent, approver),
       });
     }
   }
 
-  return { ok: reasons.length === 0, reasons };
+  return { ok: reasons.length === 0, reasons, canaryVerdict };
+}
+
+const APPROVED = "VOTE_SELECTION_APPROVED";
+
+/** A completed canary is jointly approved only when both roles cast VOTE_SELECTION_APPROVED. */
+export function classifyCanary(
+  status: string | null,
+  votes: readonly CanaryVoteView[],
+  agentUserId: string,
+  approverUserId: string,
+): CanaryVerdict {
+  if (status === null) return "not_run";
+  if (status === "ACTIVITY_STATUS_CONSENSUS_NEEDED") return "consensus_needed";
+  if (status === "ACTIVITY_STATUS_COMPLETED") {
+    const agentApproved = hasApproval(votes, agentUserId);
+    const approverApproved = hasApproval(votes, approverUserId);
+    if (agentApproved && approverApproved) return "jointly_approved";
+    if (!approverApproved) return "agent_signed_alone";
+    return "not_consensus";
+  }
+  return "not_consensus";
+}
+
+function hasApproval(votes: readonly CanaryVoteView[], userId: string): boolean {
+  const id = userId.trim();
+  if (id.length === 0) return false;
+  return votes.some((vote) => vote.userId.trim() === id && vote.selection.trim() === APPROVED);
+}
+
+function canaryStatusMessage(
+  status: string | null,
+  votes: readonly CanaryVoteView[],
+  agentUserId: string,
+  approverUserId: string,
+): string {
+  if (status === "ACTIVITY_STATUS_COMPLETED" && hasApproval(votes, approverUserId) && !hasApproval(votes, agentUserId)) {
+    return "The canary activity completed with an approver vote but no approval vote from the agent.";
+  }
+  const shown = status && status.length > 0 ? status : "empty";
+  return `The canary status is ${shown}. A passing canary is ACTIVITY_STATUS_CONSENSUS_NEEDED, or ACTIVITY_STATUS_COMPLETED with VOTE_SELECTION_APPROVED from both the agent and the guard approver.`;
 }
 
 export function agentCanSignAlone(policy: PolicyView, agentUserId: string, approverUserId: string): boolean {
@@ -199,6 +259,44 @@ export function chainsOf(wallets: readonly { chain: string }[]): TestnetChainId[
     if (isTestnetChain(wallet.chain) && !out.includes(wallet.chain)) out.push(wallet.chain);
   }
   return out;
+}
+
+function isExportDeny(condition: string): boolean {
+  return (
+    condition.includes("ACTIVITY_TYPE_EXPORT_") ||
+    condition.includes("activity.action == 'EXPORT'") ||
+    condition.includes('activity.action == "EXPORT"')
+  );
+}
+
+function isPolicyChangeDeny(condition: string): boolean {
+  return (
+    condition.includes("ACTIVITY_TYPE_CREATE_POLICY") ||
+    condition.includes("ACTIVITY_TYPE_UPDATE_POLICY") ||
+    condition.includes("ACTIVITY_TYPE_DELETE_POLICY") ||
+    condition.includes("ACTIVITY_TYPE_CREATE_POLICIES") ||
+    condition.includes("ACTIVITY_TYPE_DELETE_POLICIES") ||
+    condition.includes("activity.resource == 'POLICY'") ||
+    condition.includes('activity.resource == "POLICY"') ||
+    condition.includes("'POLICY'")
+  );
+}
+
+function isUserChangeDeny(condition: string): boolean {
+  return (
+    condition.includes("ACTIVITY_TYPE_CREATE_USERS") ||
+    condition.includes("ACTIVITY_TYPE_CREATE_API_ONLY_USERS") ||
+    condition.includes("ACTIVITY_TYPE_UPDATE_USER") ||
+    condition.includes("ACTIVITY_TYPE_DELETE_USERS") ||
+    condition.includes("ACTIVITY_TYPE_CREATE_API_KEYS") ||
+    condition.includes("ACTIVITY_TYPE_DELETE_API_KEYS") ||
+    condition.includes("activity.resource == 'USER'") ||
+    condition.includes('activity.resource == "USER"') ||
+    condition.includes("activity.resource == 'CREDENTIAL'") ||
+    condition.includes('activity.resource == "CREDENTIAL"') ||
+    condition.includes("'USER'") ||
+    condition.includes("'CREDENTIAL'")
+  );
 }
 
 function isApproveOnly(condition: string): boolean {

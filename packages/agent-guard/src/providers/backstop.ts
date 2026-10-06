@@ -93,6 +93,20 @@ export function buildBackstopPolicies(input: BackstopInput): BackstopPolicy[] {
       "agent-guard: deny raw payload signing for the agent",
     ),
   );
+  policies.push(
+    deny(
+      "true",
+      "activity.action == 'EXPORT'",
+      "agent-guard: deny private key and wallet export",
+    ),
+  );
+  policies.push(
+    deny(
+      "true",
+      "activity.resource in ['POLICY', 'USER', 'CREDENTIAL'] && activity.action in ['CREATE', 'UPDATE', 'DELETE']",
+      "agent-guard: deny user, credential, and policy changes",
+    ),
+  );
   return policies;
 }
 

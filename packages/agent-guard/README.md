@@ -69,13 +69,15 @@ M3 is the Turnkey approver adapter. The rules engine and the receipt log do not 
 - `deny` rejects it (`ACTIVITY_TYPE_REJECT_ACTIVITY`).
 - `escalate` sends neither. The activity stays pending for the owner.
 - Approve is refused until `startupCheck` passes, and until the caller sets `decisionLogged`. The same fingerprint is not approved twice.
-- `startupCheck` refuses to run when the agent can sign alone, when the approver can sign, when the two roles are the same user, when the joint consensus ALLOW is missing, when a required DENY backstop is missing, or when the canary is anything other than `ACTIVITY_STATUS_CONSENSUS_NEEDED`.
+- `startupCheck` refuses to run when the agent can sign alone, when the approver can sign, when the two roles are the same user, when the joint consensus ALLOW is missing, or when a required DENY backstop is missing.
+- A canary in `ACTIVITY_STATUS_CONSENSUS_NEEDED` passes. A canary in `ACTIVITY_STATUS_COMPLETED` passes only when `votes` contains `VOTE_SELECTION_APPROVED` from both the agent and the approver (`canaryVerdict` is `jointly_approved`). A completed canary with no approver approval is `agent_signed_alone`. Other statuses fail.
+- `healthcheck` passes only when whoami is the configured approver user in the configured organization. An agent API key fails that check.
 - Chains are Base Sepolia (chain id 84532) and Solana devnet only. A mainnet chain throws.
 - `mirrorBackstop` builds the consensus ALLOW and the DENY policies from a ruleset. The live client does not submit them.
 
 Unit tests use an in-memory Turnkey client and JSON fixtures. They do not open a socket. The live test is skipped unless `TURNKEY_ORG_ID` and `TURNKEY_API_KEY` are set. Even then it only calls whoami and the startup check. It does not approve, reject, or broadcast.
 
-The in-memory canary is a fixture: if any ALLOW lets the agent sign without the approver, the canary status is `ACTIVITY_STATUS_COMPLETED`. The live client never submits a signature request. John records a manual 0-value canary and passes its activity id.
+The in-memory canary is a fixture: if any ALLOW lets the agent sign without the approver, the canary status is `ACTIVITY_STATUS_COMPLETED` and the only vote is the agent's approval. The live client never submits a signature request. John records a manual 0-value canary and passes its activity id. The audit reads that activity's `votes` array.
 
 ## Turnkey setup for John
 
@@ -93,10 +95,12 @@ Do this in a test organization. Do not use an organization that holds mainnet fu
    - `EFFECT_DENY` when Base Sepolia `eth.tx.value` is above the native per-transaction cap.
    - `EFFECT_DENY` when `solana.tx.address_table_lookups.count != 0`.
    - `EFFECT_DENY` raw payload signing (`ACTIVITY_TYPE_SIGN_RAW_PAYLOAD` and the v2 variants) for the agent.
+   - `EFFECT_DENY` export, recognized as `activity.action == 'EXPORT'` or an `ACTIVITY_TYPE_EXPORT_` type (private key, wallet, or wallet account).
+   - `EFFECT_DENY` user, credential, and policy changes, recognized from `activity.resource` values `POLICY`, `USER`, and `CREDENTIAL`, or from activity types such as `ACTIVITY_TYPE_CREATE_POLICY`, `ACTIVITY_TYPE_UPDATE_USER`, `ACTIVITY_TYPE_CREATE_USERS`, and `ACTIVITY_TYPE_CREATE_API_KEYS`.
    - No plain ALLOW whose consensus is only the agent, and no `approvers.count() >= 1` on signing. Turnkey DENY overrides ALLOW, but an agent-only ALLOW is still a fail-open setup.
-7. Canary, by hand: with the agent API key, submit a 0-value Base Sepolia or Solana devnet transfer to an allowlisted test address. Confirm the activity status is `ACTIVITY_STATUS_CONSENSUS_NEEDED` and that it did not complete. If it completes, the agent can sign alone. Remove that policy before anything else. Do not broadcast. Put the activity id in `TURNKEY_CANARY_ACTIVITY_ID`.
+7. Canary, by hand: with the agent API key, submit a 0-value Base Sepolia or Solana devnet transfer to an allowlisted test address. Do not broadcast. A passing canary is still `ACTIVITY_STATUS_CONSENSUS_NEEDED`, or `ACTIVITY_STATUS_COMPLETED` with `VOTE_SELECTION_APPROVED` from both the agent and the approver. If it completes with no approval vote from the approver, the agent can sign alone. Remove that policy before anything else. Put the activity id in `TURNKEY_CANARY_ACTIVITY_ID`.
 8. Optional: `TURNKEY_WALLETS=base-sepolia:<wallet id>,solana-devnet:<wallet id>`, `TURNKEY_API_BASE_URL` (default `https://api.turnkey.com`), and `TURNKEY_EXPECT_READY=1` after the checklist is done.
-9. From `packages/agent-guard`, run `npm test`. With the two live variables unset, the live test skips. With them set, the test calls whoami and `startupCheck`. It still does not approve or reject. `TURNKEY_EXPECT_READY=1` asserts the startup check passed.
+9. From `packages/agent-guard`, run `npm test`. With the two live variables unset, the live test skips. With them set, the test calls whoami and `startupCheck`. It still does not approve or reject. whoami must be the approver user. `TURNKEY_EXPECT_READY=1` asserts the startup check passed, including a pending canary or a jointly approved completed canary.
 
 Open questions this package does not answer: whether Turnkey bills the approve activity, whether testnet signatures count toward the free tier, and the exact dashboard expiry of a pending activity. Turnkey's activity docs say the activity stays in `ACTIVITY_STATUS_CONSENSUS_NEEDED`, and the first approval ages out after 24 hours. Confirm that in the dashboard before relying on it.
 
