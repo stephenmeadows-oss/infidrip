@@ -229,9 +229,32 @@
     margin-top: 42px;
     display: grid;
     grid-template-columns: 1.05fr 0.95fr;
-    gap: 28px;
+    column-gap: 28px;
+    row-gap: 34px;
     align-items: start;
   }
+  .stage > .story { grid-column: 1; grid-row: 1; }
+  .stage > .phone {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    position: sticky;
+    top: 18px;
+  }
+  .agent {
+    grid-column: 1;
+    grid-row: 2;
+    min-width: 0;
+    padding-top: 28px;
+    padding-right: 10px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
+  .agent .sub { margin-bottom: 14px; }
+  .agent .copy {
+    color: #d7e4f1;
+    font-size: 1.05rem;
+    margin: 0 0 12px;
+  }
+  .agent .launch { margin: 18px 0 0; }
   .phone {
     width: min(380px, 100%);
     margin: 0 auto;
@@ -317,7 +340,8 @@
   .meta small { display: block; color: var(--muted); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
   .meta b { font-weight: 700; }
   #card-mode-cell,
-  #card-share-cell { grid-column: 1 / -1; }
+  #card-share-cell,
+  #card-agent-cell { grid-column: 1 / -1; }
   .reward-line {
     margin: 10px 0 0;
     font-size: 12.5px;
@@ -391,8 +415,71 @@
   label.mode strong { grid-column: 1; grid-row: 1; font-size: 14px; font-weight: 700; }
   label.mode span { grid-column: 1 / -1; color: var(--muted); font-size: 13px; font-weight: 360; }
   label.mode:has(input:checked) span { color: #102033; }
+  label.switch {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 12px;
+    align-items: center;
+    text-align: left;
+    border: 1px solid rgba(243, 194, 122, 0.35);
+    background: rgba(0,0,0,0.28);
+    color: var(--ink);
+    border-radius: 14px;
+    padding: 10px 12px;
+    cursor: pointer;
+    position: relative;
+  }
+  label.switch input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+    pointer-events: none;
+  }
+  .switch-ui {
+    width: 46px;
+    height: 26px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.16);
+    position: relative;
+    display: block;
+  }
+  .switch-knob {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #9eb4c9;
+    transition: transform 0.18s ease, background 0.18s ease;
+  }
+  label.switch strong { font-size: 14px; font-weight: 700; }
+  .switch-state {
+    font-family: Orbitron, sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  label.switch:has(input:checked) {
+    background: linear-gradient(90deg, rgba(61,123,255,0.85), rgba(126,240,255,0.7));
+    color: #041018;
+    border-color: transparent;
+  }
+  label.switch:has(input:checked) .switch-ui {
+    background: rgba(4, 16, 24, 0.22);
+    border-color: transparent;
+  }
+  label.switch:has(input:checked) .switch-knob {
+    transform: translateX(20px);
+    background: #041018;
+  }
+  label.switch:has(input:checked) .switch-state { color: #102033; }
   label.chip:focus-within,
   label.mode:focus-within,
+  label.switch:focus-within,
   button.launch-btn:focus-visible {
     outline: 2px solid var(--cyan);
     outline-offset: 2px;
@@ -464,8 +551,19 @@
   }
   @media (max-width: 900px) {
     .taps, .stage, .bands { grid-template-columns: 1fr; }
+    .stage > .story,
+    .stage > .phone,
+    .stage > .agent {
+      grid-column: 1;
+      grid-row: auto;
+    }
+    .stage > .phone { position: static; }
+    .agent { padding-right: 0; }
     h1 { max-width: none; }
     .chain { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .switch-knob { transition: none; }
   }
 </style>
 </head>
@@ -582,12 +680,39 @@
                   <div><small>Chain</small><b id="card-chain">Base</b></div>
                   <div id="card-mode-cell" hidden><small>What holders get</small><b id="card-mode"></b></div>
                   <div id="card-share-cell" hidden><small>Their share</small><b id="card-share"></b></div>
+                  <div id="card-agent-cell" hidden><small>Agent</small><b id="card-agent"></b></div>
                 </div>
                 <p class="reward-line" id="card-reward-line" hidden></p>
+                <p class="reward-line" id="card-agent-line" hidden></p>
               </div>
               <div class="actions"><span>Like</span><span>Reply</span><span>Share</span></div>
             </article>
           </div>
+          <section class="agent" id="agent" aria-labelledby="agent-title">
+            <h2 id="agent-title">A coin with its own brain.</h2>
+            <p class="sub">Optional. Turn it on, then pick an agent for this coin: ChatGPT, Claude, or Grok.</p>
+            <p class="copy">After launch, that agent posts, manages the community, and keeps the coin alive once the hype fades.</p>
+            <p class="copy">Creator fees do not land in a wallet. They convert into LLM credits through one gateway, across providers. The coin earns. The agent spends. The loop closes.</p>
+            <p class="copy">Every layer is opt-in. Four taps are the default. Nobody sees a wallet until they have already finished.</p>
+            <form class="launch" id="agent-step">
+              <label class="switch">
+                <input type="checkbox" id="agent-toggle" aria-controls="agent-models">
+                <span class="switch-ui" aria-hidden="true"><span class="switch-knob"></span></span>
+                <strong>Give this coin an agent</strong>
+                <span class="switch-state" id="agent-state">Off</span>
+              </label>
+              <fieldset id="agent-models" hidden>
+                <legend>Pick an agent</legend>
+                <div class="picks" id="agents">
+                  <label class="chip"><input type="radio" name="agent" value="ChatGPT">ChatGPT</label>
+                  <label class="chip"><input type="radio" name="agent" value="Claude">Claude</label>
+                  <label class="chip"><input type="radio" name="agent" value="Grok">Grok</label>
+                </div>
+              </fieldset>
+              <p class="hint" id="agent-status" aria-live="polite">Off. Four taps stay the default.</p>
+              <p class="hint">Screen only. Nothing here calls an agent or sends a transaction.</p>
+            </form>
+          </section>
         </div>
       </div>
     </section>
@@ -619,10 +744,17 @@
   var share = "";
   var mode = "";
   var launched = false;
+  var agentOn = false;
+  var agentModel = "";
   var rewardNames = { credits: "AI credits they can spend", gas: "Lower the gas on this coin" };
   var form = document.getElementById("launch-step");
   var launchBtn = document.getElementById("launch-btn");
   var launchStatus = document.getElementById("launch-status");
+  var agentForm = document.getElementById("agent-step");
+  var agentToggle = document.getElementById("agent-toggle");
+  var agentModels = document.getElementById("agent-models");
+  var agentStatus = document.getElementById("agent-status");
+  var agentState = document.getElementById("agent-state");
   var timer = null;
   function rewardLine(pct, picked) {
     if (picked === "credits") {
@@ -656,6 +788,31 @@
       document.getElementById("card-share").textContent = share + "%";
       line.textContent = rewardLine(share, mode);
     }
+    var showAgent = agentOn && !!agentModel;
+    var agentCell = document.getElementById("card-agent-cell");
+    var agentLine = document.getElementById("card-agent-line");
+    agentCell.hidden = !showAgent;
+    agentLine.hidden = !showAgent;
+    if (showAgent) {
+      document.getElementById("card-agent").textContent = agentModel;
+      agentLine.textContent = "Creator fees become LLM credits for this agent.";
+    }
+  }
+  function syncAgent() {
+    agentOn = agentToggle.checked;
+    var picked = agentForm.querySelector("input[name=agent]:checked");
+    agentModel = picked ? picked.value : "";
+    agentModels.hidden = !agentOn;
+    agentModels.disabled = !agentOn;
+    agentState.textContent = agentOn ? "On" : "Off";
+    if (!agentOn) {
+      agentStatus.textContent = "Off. Four taps stay the default.";
+    } else if (!agentModel) {
+      agentStatus.textContent = "On. Pick ChatGPT, Claude, or Grok.";
+    } else {
+      agentStatus.textContent = agentModel + " is on this card.";
+    }
+    paint();
   }
   function readLaunch() {
     var shareEl = form.querySelector("input[name=share]:checked");
@@ -699,6 +856,9 @@
     launchStatus.textContent = "Locked in. Nothing here sends a transaction.";
     paint();
   });
+  agentForm.addEventListener("submit", function (e) { e.preventDefault(); });
+  agentForm.addEventListener("change", syncAgent);
+  syncAgent();
   timer = setInterval(function () { i = (i + 1) % stories.length; paint(); }, 4200);
   paint();
 })();
