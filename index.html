@@ -562,6 +562,25 @@
     h1 { max-width: none; }
     .chain { display: none; }
   }
+  /* Cover scales this tall artwork to the viewport height and clips the sides.
+     On a phone, fit the width so the wordmark and chain stay on screen. */
+  @media (max-width: 640px) {
+    .hero {
+      align-items: start;
+      overflow-x: hidden;
+      background-color: #03050a;
+      background-image:
+        linear-gradient(180deg, rgba(3,5,10,0.04) 0%, rgba(3,5,10,0.1) 30%, rgba(3,5,10,0.78) 48%, rgba(3,5,10,0.94) 64%, #03050a 80%),
+        url("hero.jpg");
+      background-repeat: no-repeat, no-repeat;
+      background-position: center top, center top;
+      background-size: auto, calc(100% - 12vw) auto;
+    }
+    .hero-copy {
+      width: 100%;
+      padding: calc(0.78 * (100% - 12vw)) 6vw 56px;
+    }
+  }
   @media (prefers-reduced-motion: reduce) {
     .switch-knob { transition: none; }
   }
