@@ -585,6 +585,246 @@
   @media (prefers-reduced-motion: reduce) {
     .switch-knob { transition: none; }
   }
+  .hero-links {
+    margin-top: 28px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 22px;
+    align-items: center;
+  }
+  .hero-links .scroll { margin-top: 0; }
+  .pay-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    align-items: stretch;
+    min-width: 0;
+  }
+  .pay-card {
+    position: relative;
+    min-width: 0;
+    max-width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    border-radius: 22px;
+    border: 1px solid transparent;
+    padding: 18px 18px 16px;
+    overflow: hidden;
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.38);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .pay-card-sol {
+    background:
+      radial-gradient(90% 70% at 0% 0%, rgba(153, 69, 255, 0.24), transparent 52%) padding-box,
+      linear-gradient(180deg, rgba(16, 24, 40, 0.96), rgba(6, 9, 16, 0.98)) padding-box,
+      linear-gradient(140deg, #9945FF, #43B4CA 48%, #19FB9B) border-box;
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.38), 0 0 28px rgba(153, 69, 255, 0.16);
+  }
+  .pay-card-eth {
+    background:
+      radial-gradient(90% 70% at 100% 0%, rgba(138, 146, 178, 0.22), transparent 50%) padding-box,
+      linear-gradient(180deg, rgba(16, 24, 40, 0.96), rgba(6, 9, 16, 0.98)) padding-box,
+      linear-gradient(140deg, #c5cbe0, #62688f 46%, #8a92b2 72%, #f3c27a) border-box;
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.38), 0 0 28px rgba(138, 146, 178, 0.16);
+  }
+  .pay-card::after {
+    content: "";
+    position: absolute;
+    left: 16%;
+    right: 16%;
+    bottom: 0;
+    height: 2px;
+    pointer-events: none;
+  }
+  .pay-card-sol::after {
+    background: linear-gradient(90deg, transparent, #9945FF, #19FB9B, transparent);
+  }
+  .pay-card-eth::after {
+    background: linear-gradient(90deg, transparent, #8a92b2, #f3c27a, transparent);
+  }
+  .pay-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+  }
+  .pay-mark {
+    width: 56px;
+    height: 56px;
+    flex: none;
+    display: grid;
+    place-items: center;
+    border-radius: 16px;
+    background: radial-gradient(circle at 50% 40%, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.03) 72%);
+  }
+  .pay-card-sol .pay-mark {
+    box-shadow: 0 0 18px rgba(153, 69, 255, 0.35), 0 0 22px rgba(25, 251, 155, 0.12);
+  }
+  .pay-card-eth .pay-mark {
+    box-shadow: 0 0 18px rgba(138, 146, 178, 0.4);
+  }
+  .pay-logo {
+    display: block;
+    object-fit: contain;
+  }
+  .pay-logo-sol {
+    width: 42px;
+    height: 36px;
+    filter: drop-shadow(0 0 6px rgba(153, 69, 255, 0.55));
+  }
+  .pay-logo-eth {
+    width: 34px;
+    height: 34px;
+  }
+  .pay-chain {
+    margin: 0;
+    min-width: 0;
+    color: #d5e6f5;
+    font-size: 0.98rem;
+    line-height: 1.35;
+  }
+  .pay-chain span {
+    display: block;
+    font-family: Orbitron, sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    color: var(--gold);
+    font-size: 13px;
+  }
+  .pay-qr {
+    width: min(176px, 100%);
+    margin: 16px auto 14px;
+    padding: 8px;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25), 0 0 22px rgba(126, 240, 255, 0.16);
+  }
+  .pay-qr img {
+    width: 100%;
+    height: auto;
+  }
+  .pay-label {
+    margin: 0 0 6px;
+    font-family: Orbitron, sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--cyan);
+  }
+  .pay-addr {
+    margin: 0;
+    padding: 12px 12px;
+    border-radius: 14px;
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(126, 240, 255, 0.22);
+    color: var(--cyan);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 13.5px;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+    word-break: break-all;
+    user-select: all;
+  }
+  .pay-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 14px;
+  }
+  button.pay-copy,
+  a.pay-wallet {
+    appearance: none;
+    border-radius: 999px;
+    padding: 11px 16px;
+    font: 700 14px Sora, sans-serif;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    line-height: 1.2;
+  }
+  button.pay-copy {
+    border: 1px solid var(--line);
+    background: rgba(126, 240, 255, 0.08);
+    color: var(--cyan);
+  }
+  button.pay-copy.is-copied,
+  a.pay-wallet {
+    border: 0;
+    color: #041018;
+    background: linear-gradient(90deg, var(--gold), var(--cyan));
+  }
+  .pay-foot {
+    margin-top: auto;
+    padding-top: 14px;
+  }
+  .pay-warn {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.92rem;
+  }
+  .pay-status {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  .pay-wallets {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 10px 0 0;
+    padding: 8px 10px;
+    border-radius: 12px;
+    background: rgba(204, 255, 0, 0.06);
+    border: 1px solid rgba(204, 255, 0, 0.28);
+    color: #d7e4f1;
+    font-size: 12.5px;
+    line-height: 1.4;
+  }
+  .pay-wallets img {
+    width: 14px;
+    height: 18px;
+    flex: none;
+    margin-top: 1px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 5px rgba(204, 255, 0, 0.55));
+  }
+  .pay-wallets span { min-width: 0; }
+  button.pay-copy:focus-visible,
+  a.pay-wallet:focus-visible,
+  .hero-links .scroll:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 2px;
+  }
+  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    .pay-card-sol:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 24px 50px rgba(0, 0, 0, 0.46), 0 0 36px rgba(153, 69, 255, 0.32);
+    }
+    .pay-card-eth:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 24px 50px rgba(0, 0, 0, 0.46), 0 0 36px rgba(138, 146, 178, 0.34);
+    }
+  }
+  @media (max-width: 860px) {
+    .pay-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 640px) {
+    .pay-card { padding: 16px 14px 14px; }
+    .pay-actions { display: grid; grid-template-columns: 1fr; }
+    button.pay-copy,
+    a.pay-wallet { width: 100%; }
+    .pay-qr { width: min(168px, 72%); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .pay-card { transition: none; }
+  }
 </style>
 </head>
 <body>
@@ -596,7 +836,10 @@
         <span>Enable normie tokenization.</span>
       </h1>
       <p class="lede">We meet them where they are. Launch a token right from Facebook. Your people are already there. A token gives that community something to own, and a reason to grow.</p>
-      <a class="scroll" href="#taps"><b>↓</b> Four taps</a>
+      <div class="hero-links">
+        <a class="scroll" href="#taps"><b>↓</b> Four taps</a>
+        <a class="scroll" href="#donate"><b>+</b> Donate</a>
+      </div>
     </div>
   </header>
   <main>
@@ -746,6 +989,61 @@
         </div>
       </div>
     </section>
+    <section id="donate" aria-labelledby="donate-title">
+      <div class="wrap">
+        <div class="kicker"><i></i> Support Infidrip</div>
+        <h2 id="donate-title">Donate to Infidrip</h2>
+        <p class="sub">Help us bring more people on chain. Donations in SOL or ETH go straight to building Infidrip.</p>
+        <div class="pay-grid">
+          <article class="pay-card pay-card-sol" aria-label="Donate SOL on Solana">
+            <div class="pay-head">
+              <div class="pay-mark">
+                <img class="pay-logo pay-logo-sol" src="solana.svg" alt="Solana" width="42" height="36">
+              </div>
+              <p class="pay-chain"><span>SOL</span> on Solana network only</p>
+            </div>
+            <div class="pay-qr">
+              <img src="qr-solana.svg" alt="QR code for the Infidrip Solana donation address" width="176" height="176">
+            </div>
+            <p class="pay-label">Solana address</p>
+            <p class="pay-addr" id="sol-address">EEQzHtX66bqacFvkb8hi1Xrovrek8GmXBGP8kFrh5Y6H</p>
+            <div class="pay-actions">
+              <button type="button" class="pay-copy" data-target="sol-address" data-status="sol-copy-status">Copy address</button>
+              <a class="pay-wallet" href="solana:EEQzHtX66bqacFvkb8hi1Xrovrek8GmXBGP8kFrh5Y6H?label=Infidrip">Donate in wallet</a>
+            </div>
+            <div class="pay-foot">
+              <p class="pay-warn">Send SOL or SPL tokens on Solana only.</p>
+              <p class="pay-status" id="sol-copy-status" aria-live="polite"></p>
+            </div>
+          </article>
+          <article class="pay-card pay-card-eth" aria-label="Donate ETH on Ethereum">
+            <div class="pay-head">
+              <div class="pay-mark">
+                <img class="pay-logo pay-logo-eth" src="ethereum.svg" alt="Ethereum" width="34" height="34">
+              </div>
+              <p class="pay-chain"><span>ETH</span> on Ethereum mainnet only</p>
+            </div>
+            <div class="pay-qr">
+              <img src="qr-ethereum.svg" alt="QR code for the Infidrip Ethereum donation address" width="176" height="176">
+            </div>
+            <p class="pay-label">Ethereum address</p>
+            <p class="pay-addr" id="eth-address">0x5884594a97bc54378667ea62c6ded4d6bbc167c6</p>
+            <div class="pay-actions">
+              <button type="button" class="pay-copy" data-target="eth-address" data-status="eth-copy-status">Copy address</button>
+              <a class="pay-wallet" href="ethereum:0x5884594a97bc54378667ea62c6ded4d6bbc167c6">Donate in wallet</a>
+            </div>
+            <div class="pay-foot">
+              <p class="pay-warn">Send ETH or ERC-20 on Ethereum mainnet only.</p>
+              <p class="pay-wallets">
+                <img src="robinhood.svg" alt="" width="14" height="18">
+                <span>Works from Robinhood, Coinbase, MetaMask, or any Ethereum wallet</span>
+              </p>
+              <p class="pay-status" id="eth-copy-status" aria-live="polite"></p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
   </main>
   <footer>
     <div>Infidrip. Token launchpad.</div>
@@ -881,6 +1179,49 @@
   syncAgent();
   timer = setInterval(function () { i = (i + 1) % stories.length; paint(); }, 4200);
   paint();
+})();
+</script>
+<script>
+(function () {
+  var buttons = document.querySelectorAll(".pay-copy");
+  Array.prototype.forEach.call(buttons, function (btn) {
+    var addr = document.getElementById(btn.getAttribute("data-target"));
+    var status = document.getElementById(btn.getAttribute("data-status"));
+    var timer = null;
+    function mark() {
+      btn.textContent = "Copied";
+      btn.classList.add("is-copied");
+      if (status) status.textContent = "Address copied.";
+      clearTimeout(timer);
+      timer = setTimeout(function () {
+        btn.textContent = "Copy address";
+        btn.classList.remove("is-copied");
+        if (status) status.textContent = "";
+      }, 2000);
+    }
+    function fallback(text) {
+      var ta = document.createElement("textarea");
+      ta.value = text;
+      ta.setAttribute("readonly", "");
+      ta.style.position = "fixed";
+      ta.style.left = "-9999px";
+      document.body.appendChild(ta);
+      ta.select();
+      var ok = false;
+      try { ok = document.execCommand("copy"); } catch (err) { ok = false; }
+      document.body.removeChild(ta);
+      if (ok) mark();
+      else if (status) status.textContent = "Select the address and copy it.";
+    }
+    btn.addEventListener("click", function () {
+      var text = addr.textContent.replace(/\s+/g, "");
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(mark).catch(function () { fallback(text); });
+      } else {
+        fallback(text);
+      }
+    });
+  });
 })();
 </script>
 </body>
