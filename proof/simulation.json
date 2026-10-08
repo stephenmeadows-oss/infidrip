@@ -1,0 +1,88 @@
+{
+  "testCoin": {
+    "name": "Test Coin",
+    "symbol": "TEST",
+    "description": "A plain test coin.",
+    "image": "64px solid square, rgb 136,136,136, no text",
+    "links": "none"
+  },
+  "metadataUpload": {
+    "metadataUri": "https://ipfs.io/ipfs/bafkreicttmxcey7w23xlgs4l3rniafhvx6azcm5chcpqp733r4zlrsopxy",
+    "accessControlAllowOrigin": null,
+    "browserCanRead": false,
+    "solChargedByUpload": "0"
+  },
+  "program": "6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P",
+  "supplyTokens": 1000000000,
+  "decimals": 6,
+  "mainnetCost": {
+    "networkFeeLamports": "10000",
+    "rentLamports": "7208520",
+    "rentParts": {
+      "mintLen": 411,
+      "curveLen": 166,
+      "ataLen": 165,
+      "mint": "2738120",
+      "curve": "1493520",
+      "curveAta": "1488440",
+      "userAta": "1488440",
+      "total": "7208520"
+    },
+    "creationFeeLamports": "0",
+    "initialBuyLamports": "1000000",
+    "curveFeeBps": {
+      "protocolFeeBps": 95,
+      "creatorFeeBps": 30,
+      "lpFeeBps": 0,
+      "marketCapLamports": "27958993476"
+    },
+    "storageLamports": "0 for this server-side upload",
+    "siteFeeLamports": "0",
+    "thirdPartyApiFee": "0, instructions are built locally",
+    "totalWithoutStorageLamports": "8218520",
+    "measuredBy": [
+      "getFeeForMessage on the built transaction",
+      "getMinimumBalanceForRentExemption for mint, curve, and token accounts",
+      "computeFeesBps and selectCurveFeeSchedule on live accounts"
+    ]
+  },
+  "mainnet": {
+    "cluster": "mainnet-beta",
+    "rpc": "https://solana-rpc.publicnode.com",
+    "mint": "CChQ16etnS7dphnRDDdeX8yjcteArZZcbSj4b69E22g6",
+    "feePayer": "E5R8puYJ9iJzQYy9ycrBoN4LVL6ypBdTfJiofVKNgz9t",
+    "bytes": 1201,
+    "feeLamports": "10000",
+    "tokenAmount": "34970653780",
+    "err": "AccountNotFound",
+    "logs": [],
+    "unitsConsumed": 0,
+    "sent": false
+  },
+  "devnet": {
+    "cluster": "devnet",
+    "rpc": "https://api.devnet.solana.com",
+    "mint": "6iCspdxFTzxPuPfpXuxEZwY1X9yarpmbeUxbYoMVa1i3",
+    "feePayer": "Bk9wHJdn69sP6oCwqufuV9zPd9meiGaW9QizoFc52SjF",
+    "bytes": 1201,
+    "feeLamports": "10000",
+    "tokenAmount": "1048118974459",
+    "err": "AccountNotFound",
+    "logs": [],
+    "unitsConsumed": 0,
+    "sent": false,
+    "airdrop": {
+      "ok": false,
+      "attempts": [
+        "airdrop to 9b7pRb7usNLuipeXjJJX7JKkd93c3zr7AiP2bCQbMNVt failed: Internal error",
+        "airdrop to 9b7pRb7usNLuipeXjJJX7JKkd93c3zr7AiP2bCQbMNVt failed: Internal error",
+        "airdrop to 9b7pRb7usNLuipeXjJJX7JKkd93c3zr7AiP2bCQbMNVt failed: Internal error"
+      ]
+    }
+  },
+  "notes": [
+    "The create transaction was simulated and not sent.",
+    "A real launch still needs a funded wallet.",
+    "The test coin uses a neutral name, ticker, and solid color image."
+  ]
+}

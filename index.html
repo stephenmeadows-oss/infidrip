@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Infidrip | Enable normie tokenization</title>
-<meta name="description" content="Enable normie tokenization. We meet them where they are. Launch a token right from Facebook. Your people are already there. A token gives that community something to own, and a reason to grow.">
+<meta name="description" content="The next wave on chain will not arrive through a trading screen. It arrives through the names people already love. Infidrip is the door.">
 <meta property="og:title" content="Infidrip | Enable normie tokenization">
-<meta property="og:description" content="Enable normie tokenization. We meet them where they are. Launch a token right from Facebook. Your people are already there. A token gives that community something to own, and a reason to grow.">
+<meta property="og:description" content="The next wave on chain will not arrive through a trading screen. It arrives through the names people already love. Infidrip is the door.">
 <meta property="og:image" content="hero.jpg">
 <meta property="og:type" content="website">
 <meta name="theme-color" content="#05070d">
@@ -821,170 +821,276 @@
   @media (prefers-reduced-motion: reduce) {
     .pay-card { transition: none; }
   }
+  .support {
+    margin: 14px 0 0;
+    max-width: 40rem;
+    color: #d5e6f5;
+    font-size: 1.05rem;
+  }
+  .tap input.field {
+    width: 100%;
+    margin-top: 10px;
+    border: 0;
+    border-bottom: 1px solid rgba(126, 240, 255, 0.35);
+    background: transparent;
+    color: var(--ink);
+    font: 700 clamp(1.25rem, 2vw, 1.7rem) Sora, sans-serif;
+    padding: 6px 0;
+  }
+  .tap input.field::placeholder { color: rgba(232, 244, 255, 0.35); }
+  .tap input.field:focus { outline: none; border-bottom-color: var(--cyan); }
+  button.chip .soon {
+    display: block;
+    margin-top: 2px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+  }
+  .footnote { margin: 18px 0 0; color: var(--muted); }
+  details.advanced {
+    margin-top: 18px;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 14px 16px 16px;
+    background: rgba(6, 10, 18, 0.55);
+  }
+  details.advanced summary {
+    cursor: pointer;
+    font-family: Orbitron, sans-serif;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-size: 12px;
+    color: var(--gold);
+  }
+  .advanced label {
+    display: block;
+    margin: 14px 0 6px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  .advanced input,
+  .advanced textarea {
+    width: 100%;
+    border: 1px solid rgba(126, 240, 255, 0.28);
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.28);
+    color: var(--ink);
+    font: 460 1rem Sora, sans-serif;
+    padding: 10px 12px;
+  }
+  .advanced textarea { min-height: 84px; resize: vertical; }
+  .launcher-grid {
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+    gap: 28px;
+    align-items: start;
+  }
+  .launch-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+  .cost {
+    margin-top: 16px;
+    display: grid;
+    gap: 8px;
+  }
+  .cost div {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 14px;
+  }
+  .cost .total {
+    border-top: 1px solid var(--line);
+    padding-top: 8px;
+    font-size: 16px;
+  }
+  #launch-status.is-error { color: var(--amber); }
+  .mint-line { word-break: break-all; font-size: 13px; }
+  .result-links, #card-links { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 10px; }
+  #card-image, #image-preview {
+    width: 96px;
+    height: 96px;
+    object-fit: cover;
+    border-radius: 12px;
+    background: #4a4a4a;
+  }
+  #image-preview { margin-top: 10px; }
+  #feed-list { margin-top: 12px; display: grid; gap: 10px; }
+  #feed-list .card { margin: 0; }
+  .copy { color: #d7e4f1; font-size: 1.05rem; margin: 0 0 12px; }
+  .kicker-line {
+    margin: 8px 0 18px;
+    font-family: Orbitron, sans-serif;
+    color: var(--gold);
+    letter-spacing: 0.04em;
+  }
+  .disclaimer p { max-width: 46rem; color: #d5e6f5; margin: 0; }
+  .rewards-list {
+    margin: 0;
+    padding-left: 1.25rem;
+    max-width: 46rem;
+    color: #d7e4f1;
+    font-size: 1.05rem;
+  }
+  .rewards-list li { margin: 0 0 12px; }
+  @media (max-width: 900px) {
+    .launcher-grid { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 <body>
   <header class="hero">
     <div class="rain" aria-hidden="true"></div>
     <div class="hero-copy">
-      <div class="kicker"><i></i> Token launchpad</div>
+      <div class="kicker"><i></i> Infidrip</div>
       <h1>
         <span>Enable normie tokenization.</span>
       </h1>
-      <p class="lede">We meet them where they are. Launch a token right from Facebook. Your people are already there. A token gives that community something to own, and a reason to grow.</p>
+      <p class="lede">We meet them where they are.</p>
+      <p class="support">The next wave on chain will not arrive through a trading screen. It arrives through the names people already love. Infidrip is the door.</p>
       <div class="hero-links">
-        <a class="scroll" href="#taps"><b>↓</b> Four taps</a>
-        <a class="scroll" href="#donate"><b>+</b> Donate</a>
+        <a class="scroll" href="#launcher"><b>↓</b> Launch a coin</a>
+        <a class="scroll" href="#taps"><b>↓</b> See how it works</a>
       </div>
     </div>
   </header>
   <main>
-    <section id="taps">
-      <div class="wrap">
-        <h2>Four taps. That is the whole product.</h2>
-        <p class="sub">Name, ticker, your slice, and the chain.</p>
-        <div class="chain" aria-hidden="true">
-          <span class="linkbit"></span><span class="linkbit"></span><span class="linkbit"></span><span class="linkbit"></span><span class="linkbit"></span><span class="linkbit"></span><span class="linkbit"></span>
-        </div>
-        <div class="taps">
-          <article class="tap">
-            <div class="num">TAP 01</div>
-            <div class="label">NAME</div>
-            <div class="value" id="v-name">Harbor Roast</div>
-            <div class="hint">The business, or you.</div>
-          </article>
-          <article class="tap">
-            <div class="num">TAP 02</div>
-            <div class="label">TICKER</div>
-            <div class="value" id="v-ticker">HRST</div>
-            <div class="hint">Short enough for a group chat.</div>
-          </article>
-          <article class="tap">
-            <div class="num">TAP 03</div>
-            <div class="label">YOUR SLICE</div>
-            <div class="value" id="v-slice">20%</div>
-            <div class="hint">What you keep at the open.</div>
-          </article>
-          <article class="tap">
-            <div class="num">TAP 04</div>
-            <div class="label">CHAIN</div>
-            <div class="value" id="v-chain">Base</div>
-            <div class="picks" id="chains">
-              <button class="chip on" type="button" data-chain="Base">Base</button>
-              <button class="chip" type="button" data-chain="Solana">Solana</button>
-              <button class="chip" type="button" data-chain="Ethereum">Ethereum</button>
-            </div>
-            <div class="hint">Base, Solana, or Ethereum.</div>
-          </article>
-        </div>
-        <div class="stage">
-          <div class="story">
-            <form class="launch" id="launch-step">
-              <h2>What holders get.</h2>
-              <p class="hint">Pick their share of each trade, and what that share becomes. It locks in when you launch.</p>
-              <fieldset>
-                <legend>Their share</legend>
-                <div class="picks" id="shares">
-                  <label class="chip"><input type="radio" name="share" value="1">1%</label>
-                  <label class="chip"><input type="radio" name="share" value="2">2%</label>
-                  <label class="chip"><input type="radio" name="share" value="3">3%</label>
-                  <label class="chip"><input type="radio" name="share" value="4">4%</label>
-                </div>
-                <p class="hint">From 1% to 4% of each trade.</p>
-              </fieldset>
-              <fieldset>
-                <legend>What holders get</legend>
-                <div class="modes" id="rewards">
-                  <label class="mode">
-                    <input type="radio" name="reward" value="credits">
-                    <strong>AI credits they can spend</strong>
-                    <span>Their share of each trade turns into credits for API use.</span>
-                  </label>
-                  <label class="mode">
-                    <input type="radio" name="reward" value="gas">
-                    <strong>Lower the gas on this coin</strong>
-                    <span>Same share, but it lowers the gas on this coin. No credits.</span>
-                  </label>
-                </div>
-              </fieldset>
-              <button type="submit" class="launch-btn" id="launch-btn" disabled>Launch</button>
-              <p class="hint" id="launch-status" aria-live="polite">Pick 1% to 4%, and what holders get.</p>
-            </form>
-            <h2>Then the card is in the feed.</h2>
-            <p>Facebook, Instagram, or X. Same card. Name, ticker, your slice, and the chain.</p>
-            <div class="pills" id="feeds">
-              <button class="chip on" type="button" data-feed="Facebook">Facebook</button>
-              <button class="chip" type="button" data-feed="Instagram">Instagram</button>
-              <button class="chip" type="button" data-feed="X">X</button>
-            </div>
-            <p class="hint">This page is the front door. It does not run a sale, quote a price, or show a contract.</p>
-          </div>
-          <div class="phone" aria-label="Token card in a social feed">
-            <div class="notch"></div>
-            <div class="feedhead"><strong id="feed-name">Facebook</strong><span>following</span></div>
-            <article class="post">
-              <div class="post-top">
-                <div class="avatar"></div>
-                <div>
-                  <div class="who" id="post-name">Harbor Roast</div>
-                  <div class="where" id="post-where">Token card · just now</div>
-                </div>
+    <form id="launch-form">
+      <section id="taps">
+        <div class="wrap">
+          <h2>Four taps. That is the whole thing.</h2>
+          <div class="taps">
+            <article class="tap">
+              <div class="num">01</div>
+              <label class="label" for="name">NAME</label>
+              <input class="field" id="name" name="name" type="text" maxlength="32" autocomplete="off" placeholder="Name">
+              <div class="hint">What your people already call you.</div>
+            </article>
+            <article class="tap">
+              <div class="num">02</div>
+              <label class="label" for="ticker">TICKER</label>
+              <input class="field" id="ticker" name="ticker" type="text" maxlength="13" autocomplete="off" autocapitalize="characters" placeholder="TICKER">
+              <div class="hint">The word the timeline will type.</div>
+            </article>
+            <article class="tap">
+              <div class="num">03</div>
+              <label class="label" for="slice">YOUR SLICE</label>
+              <input class="field" id="slice" name="slice" type="text" inputmode="decimal" autocomplete="off" placeholder="0">
+              <div class="hint">Your slice: What you buy in first, in SOL. Optional.</div>
+            </article>
+            <article class="tap">
+              <div class="num">04</div>
+              <div class="label">CHAIN</div>
+              <div class="picks" id="chains">
+                <button class="chip on" type="button" data-chain="Solana">Solana</button>
+                <button class="chip" type="button" data-chain="Base">Base<span class="soon">Coming soon</span></button>
+                <button class="chip" type="button" data-chain="Ethereum">Ethereum<span class="soon">Coming soon</span></button>
               </div>
-              <div class="card" id="token-card">
-                <div class="mark">INFIDRIP</div>
-                <h3 id="card-name">Harbor Roast</h3>
-                <div class="ticker" id="card-ticker">HRST</div>
-                <div class="meta">
-                  <div><small>Your slice</small><b id="card-slice">20% at the open</b></div>
-                  <div><small>Chain</small><b id="card-chain">Base</b></div>
-                  <div id="card-mode-cell" hidden><small>What holders get</small><b id="card-mode"></b></div>
-                  <div id="card-share-cell" hidden><small>Their share</small><b id="card-share"></b></div>
-                  <div id="card-agent-cell" hidden><small>Agent</small><b id="card-agent"></b></div>
-                </div>
-                <p class="reward-line" id="card-reward-line" hidden></p>
-                <p class="reward-line" id="card-agent-line" hidden></p>
-              </div>
-              <div class="actions"><span>Like</span><span>Reply</span><span>Share</span></div>
+              <div class="hint">Chain: Solana.</div>
             </article>
           </div>
-          <section class="agent" id="agent" aria-labelledby="agent-title">
-            <h2 id="agent-title">A coin with its own brain.</h2>
-            <p class="sub">Optional. Turn it on, then pick an agent for this coin: ChatGPT, Claude, or Grok.</p>
-            <p class="copy">After launch, that agent posts, manages the community, and keeps the coin alive once the hype fades.</p>
-            <p class="copy">Creator fees do not land in a wallet. They convert into LLM credits through one gateway, across providers. The coin earns. The agent spends. The loop closes.</p>
-            <p class="copy">Every layer is opt-in. Four taps are the default. Nobody sees a wallet until they have already finished.</p>
-            <form class="launch" id="agent-step">
-              <label class="switch">
-                <input type="checkbox" id="agent-toggle" aria-controls="agent-models">
-                <span class="switch-ui" aria-hidden="true"><span class="switch-knob"></span></span>
-                <strong>Give this coin an agent</strong>
-                <span class="switch-state" id="agent-state">Off</span>
-              </label>
-              <fieldset id="agent-models" hidden>
-                <legend>Pick an agent</legend>
-                <div class="picks" id="agents">
-                  <label class="chip"><input type="radio" name="agent" value="ChatGPT">ChatGPT</label>
-                  <label class="chip"><input type="radio" name="agent" value="Claude">Claude</label>
-                  <label class="chip"><input type="radio" name="agent" value="Grok">Grok</label>
+          <p class="footnote">Everything else is optional.</p>
+          <details class="advanced">
+            <summary>Advanced</summary>
+            <label for="image-file">Image</label>
+            <input id="image-file" name="image" type="file" accept="image/png,image/jpeg,image/webp,image/gif">
+            <img id="image-preview" alt="Chosen coin image" hidden>
+            <p class="hint">Skip the image and the coin uses its ticker on a plain background.</p>
+            <label for="description">Description</label>
+            <textarea id="description" name="description" maxlength="200"></textarea>
+            <p class="hint">Leave this empty and the description is: A new coin.</p>
+            <label for="twitter">X link</label>
+            <input id="twitter" name="twitter" type="url" inputmode="url" placeholder="https://" autocomplete="off">
+            <label for="website">Website</label>
+            <input id="website" name="website" type="url" inputmode="url" placeholder="https://" autocomplete="off">
+          </details>
+        </div>
+      </section>
+      <section id="launcher">
+        <div class="wrap">
+          <h2>Real coins. Live the moment you sign.</h2>
+          <p class="copy">Every launch mints a real Solana token. It trades right away on a public bonding curve, open to anyone.</p>
+          <p class="copy">You sign with Phantom. You pay your own fees.</p>
+          <p class="kicker-line">No gatekeeper. No middle step.</p>
+          <div class="launcher-grid">
+            <div>
+              <div class="label">NETWORK</div>
+              <div class="picks" id="networks">
+                <button class="chip on" type="button" data-net="mainnet-beta">Mainnet</button>
+                <button class="chip" type="button" data-net="devnet">Devnet</button>
+              </div>
+              <p class="hint">Supply: 1,000,000,000.</p>
+              <p class="hint" id="devnet-note" hidden>Devnet is for testing. Test storage is not kept as long as mainnet storage. A real mainnet launch needs SOL in your wallet.</p>
+              <div id="cost" hidden></div>
+              <div class="launch-actions">
+                <button type="button" class="launch-btn" id="connect-btn">Connect Phantom</button>
+                <button type="submit" class="launch-btn" id="launch-btn" disabled>Launch</button>
+              </div>
+              <p class="hint" id="launch-status" aria-live="polite"></p>
+              <div id="result" hidden>
+                <p class="mint-line" id="result-mint"></p>
+                <p class="result-links">
+                  <a id="result-trade" href="#" target="_blank" rel="noopener noreferrer" hidden>Trading page</a>
+                  <a id="result-solscan" href="#" target="_blank" rel="noopener noreferrer">Solscan</a>
+                </p>
+                <p class="hint" id="devnet-result" hidden>This devnet coin is not on the mainnet trading page.</p>
+              </div>
+              <p class="hint">Coins launch on a public Solana bonding curve.</p>
+              <p class="hint">Holder rewards: Coming soon.</p>
+            </div>
+            <div class="phone" aria-label="Token card preview">
+              <div class="notch"></div>
+              <div class="feedhead"><strong>Preview</strong></div>
+              <article class="post">
+                <div class="post-top">
+                  <div>
+                    <div class="who" id="post-name">Name</div>
+                    <div class="where">Token card</div>
+                  </div>
                 </div>
-              </fieldset>
-              <p class="hint" id="agent-status" aria-live="polite">Off. Four taps stay the default.</p>
-              <p class="hint">Screen only. Nothing here calls an agent or sends a transaction.</p>
-            </form>
-          </section>
+                <div class="card" id="token-card">
+                  <img id="card-image" alt="" hidden>
+                  <h3 id="card-name">Name</h3>
+                  <div class="ticker" id="card-ticker">TICKER</div>
+                  <div class="meta">
+                    <div><small>Your slice</small><b id="card-slice">0 SOL</b></div>
+                    <div><small>Chain</small><b id="card-chain">Solana</b></div>
+                  </div>
+                  <div id="card-links" hidden></div>
+                </div>
+              </article>
+              <div id="feed-list"></div>
+            </div>
+          </div>
         </div>
-      </div>
-    </section>
-    <section>
+      </section>
+    </form>
+    <section class="brain" id="brain" aria-labelledby="brain-title">
       <div class="wrap">
-        <h2>Your people are already there.</h2>
-        <div class="bands">
-          <div class="band"><strong>WHERE THEY ARE</strong> Launch a token right from Facebook. Instagram and X carry the same card.</div>
-          <div class="band"><strong>WHAT THEY SEE</strong> The business, or you. A ticker short enough for a group chat. Your slice at the open. Base, Solana, or Ethereum.</div>
-          <div class="band"><strong>A REASON TO GROW</strong> A token gives that community something to own, and a reason to grow.</div>
-        </div>
+        <div class="kicker"><i></i> Coming soon</div>
+        <h2 id="brain-title">A coin with its own brain.</h2>
+        <p class="copy">Every coin gets an agent that runs its X account. It posts, replies, and keeps the community moving.</p>
+        <p class="copy">It learns what its community responds to and keeps the conversation going, day and night.</p>
+        <p class="kicker-line">Coins that think. That is where this goes.</p>
       </div>
     </section>
+    <section class="rewards" id="rewards" aria-labelledby="rewards-title">
+      <div class="wrap">
+        <div class="kicker"><i></i> Coming soon</div>
+        <h2 id="rewards-title">Rewards and airdrops</h2>
+        <ol class="rewards-list">
+          <li>Rewards for builders. Launch, post, and grow your community, and earn AI credits for your coin's brain.</li>
+          <li>The more your community shows up, the more your brain gets to work.</li>
+          <li>Early builders may be eligible for future airdrops.</li>
+          <li>Rewards program and airdrop details, if any, will be announced on official Infidrip channels only. Rules published before anything opens.</li>
+          <li>No purchase needed. Never send funds to claim an airdrop.</li>
+        </ol>
+      </div>
+    </section>
+    <section class="disclaimer" id="disclaimer">
+      <div class="wrap">
+        <p>Plain truth. Infidrip launches real on-chain tokens. The creator pays the fees to launch. Token prices can go to zero. Nothing here is investment advice or an offer to buy or sell anything.</p>
+      </div>
+    </section>
+
     <section id="donate" aria-labelledby="donate-title">
       <div class="wrap">
         <div class="kicker"><i></i> Support Infidrip</div>
@@ -1031,8 +1137,7 @@
             <div class="pay-foot">
               <p class="pay-warn">Send ETH or ERC-20 on Ethereum mainnet only.</p>
               <p class="pay-wallets">
-                <img src="robinhood.svg" alt="" width="14" height="18">
-                <span>Works from Robinhood, Coinbase, MetaMask, or any Ethereum wallet</span>
+                <span>Works from any Ethereum wallet.</span>
               </p>
               <p class="pay-status" id="eth-copy-status" aria-live="polite"></p>
             </div>
@@ -1042,141 +1147,11 @@
     </section>
   </main>
   <footer>
-    <div>Infidrip. Token launchpad.</div>
+    <div>Infidrip</div>
     <div>We meet them where they are.</div>
+    <a href="#donate">Donate</a>
   </footer>
-<script>
-(function () {
-  var stories = [
-    { name: "Harbor Roast", ticker: "HRST", slice: "20%" },
-    { name: "Night Market", ticker: "NMKT", slice: "15%" },
-    { name: "Studio North", ticker: "STNR", slice: "25%" }
-  ];
-  var i = 0;
-  var chain = "Base";
-  var feed = "Facebook";
-  var share = "";
-  var mode = "";
-  var launched = false;
-  var agentOn = false;
-  var agentModel = "";
-  var rewardNames = { credits: "AI credits they can spend", gas: "Lower the gas on this coin" };
-  var form = document.getElementById("launch-step");
-  var launchBtn = document.getElementById("launch-btn");
-  var launchStatus = document.getElementById("launch-status");
-  var agentForm = document.getElementById("agent-step");
-  var agentToggle = document.getElementById("agent-toggle");
-  var agentModels = document.getElementById("agent-models");
-  var agentStatus = document.getElementById("agent-status");
-  var agentState = document.getElementById("agent-state");
-  var timer = null;
-  function rewardLine(pct, picked) {
-    if (picked === "credits") {
-      return pct + "% of each trade becomes AI credits they can spend on API use.";
-    }
-    return pct + "% of each trade goes to lower the gas on this coin.";
-  }
-  function paint() {
-    var s = stories[i];
-    document.getElementById("v-name").textContent = s.name;
-    document.getElementById("v-ticker").textContent = s.ticker;
-    document.getElementById("v-slice").textContent = s.slice;
-    document.getElementById("v-chain").textContent = chain;
-    document.getElementById("post-name").textContent = s.name;
-    document.getElementById("card-name").textContent = s.name;
-    document.getElementById("card-ticker").textContent = s.ticker;
-    document.getElementById("card-slice").textContent = s.slice + " at the open";
-    document.getElementById("card-chain").textContent = chain;
-    document.getElementById("feed-name").textContent = feed;
-    document.getElementById("post-where").textContent = launched ? (feed + " · locked in") : (feed + " · token card");
-    var modeCell = document.getElementById("card-mode-cell");
-    var shareCell = document.getElementById("card-share-cell");
-    var line = document.getElementById("card-reward-line");
-    var card = document.getElementById("token-card");
-    modeCell.hidden = !launched;
-    shareCell.hidden = !launched;
-    line.hidden = !launched;
-    card.classList.toggle("launched", launched);
-    if (launched) {
-      document.getElementById("card-mode").textContent = rewardNames[mode];
-      document.getElementById("card-share").textContent = share + "%";
-      line.textContent = rewardLine(share, mode);
-    }
-    var showAgent = agentOn && !!agentModel;
-    var agentCell = document.getElementById("card-agent-cell");
-    var agentLine = document.getElementById("card-agent-line");
-    agentCell.hidden = !showAgent;
-    agentLine.hidden = !showAgent;
-    if (showAgent) {
-      document.getElementById("card-agent").textContent = agentModel;
-      agentLine.textContent = "Creator fees become LLM credits for this agent.";
-    }
-  }
-  function syncAgent() {
-    agentOn = agentToggle.checked;
-    var picked = agentForm.querySelector("input[name=agent]:checked");
-    agentModel = picked ? picked.value : "";
-    agentModels.hidden = !agentOn;
-    agentModels.disabled = !agentOn;
-    agentState.textContent = agentOn ? "On" : "Off";
-    if (!agentOn) {
-      agentStatus.textContent = "Off. Four taps stay the default.";
-    } else if (!agentModel) {
-      agentStatus.textContent = "On. Pick ChatGPT, Claude, or Grok.";
-    } else {
-      agentStatus.textContent = agentModel + " is on this card.";
-    }
-    paint();
-  }
-  function readLaunch() {
-    var shareEl = form.querySelector("input[name=share]:checked");
-    var modeEl = form.querySelector("input[name=reward]:checked");
-    share = shareEl ? shareEl.value : "";
-    mode = modeEl ? modeEl.value : "";
-    if (launched) return;
-    launchBtn.disabled = !(share && mode);
-    launchStatus.textContent = (share && mode)
-      ? "Looks right. It locks in when you launch."
-      : "Pick 1% to 4%, and what holders get.";
-  }
-  document.getElementById("chains").addEventListener("click", function (e) {
-    var b = e.target.closest("button");
-    if (!b) return;
-    chain = b.getAttribute("data-chain");
-    document.querySelectorAll("#chains .chip").forEach(function (n) { n.classList.toggle("on", n === b); });
-    paint();
-  });
-  document.getElementById("feeds").addEventListener("click", function (e) {
-    var b = e.target.closest("button");
-    if (!b) return;
-    feed = b.getAttribute("data-feed");
-    document.querySelectorAll("#feeds .chip").forEach(function (n) { n.classList.toggle("on", n === b); });
-    paint();
-  });
-  form.addEventListener("change", function () {
-    clearInterval(timer);
-    readLaunch();
-  });
-  form.addEventListener("submit", function (e) {
-    e.preventDefault();
-    readLaunch();
-    if (!share || !mode || launched) return;
-    launched = true;
-    clearInterval(timer);
-    form.classList.add("is-locked");
-    form.querySelectorAll("input").forEach(function (el) { el.disabled = true; });
-    launchBtn.disabled = true;
-    launchBtn.textContent = "Locked in";
-    launchStatus.textContent = "Locked in. Nothing here sends a transaction.";
-    paint();
-  });
-  agentForm.addEventListener("submit", function (e) { e.preventDefault(); });
-  agentForm.addEventListener("change", syncAgent);
-  syncAgent();
-  timer = setInterval(function () { i = (i + 1) % stories.length; paint(); }, 4200);
-  paint();
-})();
-</script>
+<script src="assets/launcher.js"></script>
 <script>
 (function () {
   var buttons = document.querySelectorAll(".pay-copy");
