@@ -1,0 +1,41 @@
+{
+  "testedAt": "2026-10-08T04:20:34.168Z",
+  "origin": "https://infidrip.si",
+  "spentLamports": "0",
+  "pumpFunIpfs": {
+    "url": "https://pump.fun/api/ipfs",
+    "optionsStatus": 204,
+    "postStatus": 200,
+    "accessControlAllowOrigin": null,
+    "browserCanRead": false,
+    "vendorDocs": "https://pumpportal.fun/creation says this endpoint is no longer supported and shows Pinata JWT examples",
+    "ourFields": {
+      "name": "Test Coin",
+      "symbol": "TEST",
+      "description": "A plain test coin."
+    }
+  },
+  "irys": {
+    "mainnetUploadUrl": "https://uploader.irys.xyz",
+    "devnetUploadUrl": "https://devnet.irys.xyz",
+    "priceCorsAllowOrigin": "https://infidrip.si",
+    "uploadCorsAllowOrigin": "https://infidrip.si",
+    "priceLamports": {
+      "bytes2000": "2022",
+      "bytes50000": "2022",
+      "bytes200000": "4936"
+    },
+    "signedUpload": {
+      "bytes": 260,
+      "postStatus": 200,
+      "id": "7PL9hYFzHrct27g9SQuUuEk8hetTNEYvfu1UQEXCFK6q",
+      "gatewayBody": {
+        "name": "Test Coin",
+        "symbol": "TEST",
+        "description": "A plain test coin.",
+        "image": "https://example.com/square.png"
+      }
+    },
+    "apiKeyRequired": false
+  }
+}

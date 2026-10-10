@@ -1,0 +1,25 @@
+{
+  "name": "infidrip",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "simulate": "node scripts/simulate-create.mjs"
+  },
+  "dependencies": {
+    "@irys/web-upload": "0.0.15",
+    "@irys/web-upload-solana": "0.1.8",
+    "@pump-fun/pump-sdk": "3.2.0",
+    "@solana/spl-token": "^0.4.13",
+    "@solana/web3.js": "^1.98.2",
+    "bn.js": "^5.2.2",
+    "buffer": "^6.0.3",
+    "crypto-browserify": "^3.12.1",
+    "events": "^3.3.0",
+    "process": "^0.11.10",
+    "stream-browserify": "^3.0.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.10"
+  }
+}
