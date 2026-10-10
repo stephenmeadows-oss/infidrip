@@ -114,6 +114,7 @@ function labelsFor(mint, user) {
   const vault = creatorVaultPda(user);
   const map = new Map();
   map.set(user.toBase58(), "fee payer and creator");
+  map.set(launch.FEE_RECIPIENT, "Infidrip fee recipient");
   map.set(mint.toBase58(), "mint");
   map.set(curve.toBase58(), "bonding curve");
   map.set(curveAta.toBase58(), "curve token account");
@@ -206,6 +207,11 @@ async function measure(connection, rows) {
     const before = pre == null ? 0n : pre;
     const after = post == null ? 0n : post;
     const delta = after - before;
+    if (row.address === launch.FEE_RECIPIENT) {
+      retained += delta;
+      row.feeDeltaLamports = delta.toString();
+      continue;
+    }
     if (pre != null && (delta > 2000000n || delta < -2000000n)) {
       liveDrift.push({ address: row.address, label: row.label, deltaLamports: delta.toString() });
       continue;
@@ -235,7 +241,7 @@ function fundingRelated(err, logs) {
   return low.includes("accountnotfound") || low.includes("insufficient");
 }
 
-async function runCase(connection, cluster, user, buyLamports, uri, global, feeConfig) {
+async function runCaseOnce(connection, cluster, user, buyLamports, uri, global, feeConfig) {
   const mint = Keypair.generate();
   const built = await withRetry("build", function () {
     return launch.buildLaunchTransaction({
@@ -251,7 +257,15 @@ async function runCase(connection, cluster, user, buyLamports, uri, global, feeC
     });
   });
   built.tx.sign([mint]);
-  const addresses = built.tx.message.staticAccountKeys.map(function (key) {
+  const resolved = built.tx.message.getAccountKeys({
+    addressLookupTableAccounts: built.lookupTables || [],
+  });
+  const accountKeys = resolved.staticAccountKeys.slice();
+  if (resolved.accountKeysFromLookups) {
+    accountKeys.push.apply(accountKeys, resolved.accountKeysFromLookups.writable);
+    accountKeys.push.apply(accountKeys, resolved.accountKeysFromLookups.readonly);
+  }
+  const addresses = accountKeys.map(function (key) {
     return key.toBase58();
   });
   const preInfos = [];
@@ -265,6 +279,12 @@ async function runCase(connection, cluster, user, buyLamports, uri, global, feeC
     return connection.getAccountInfo(user, "processed");
   });
   preInfos.unshift(payerInfo);
+  const feeIndex = addresses.indexOf(launch.FEE_RECIPIENT);
+  if (feeIndex > 0) {
+    preInfos[feeIndex] = await withRetry("fee recipient", function () {
+      return connection.getAccountInfo(new PublicKey(launch.FEE_RECIPIENT), "processed");
+    });
+  }
   const sim = await withRetry("simulate", function () {
     return rpcSimulate(connection, built.tx, addresses);
   });
@@ -284,7 +304,13 @@ async function runCase(connection, cluster, user, buyLamports, uri, global, feeC
     feePayerSigned: false,
     sigVerify: false,
     replaceRecentBlockhash: true,
+    approach: built.approach,
+    lookupTable: built.lookupTables && built.lookupTables[0]
+      ? built.lookupTables[0].key.toBase58()
+      : null,
     bytes: built.bytes,
+    feeTxBytes: built.feeTxBytes || null,
+    infidripFeeLamports: built.infidripFeeLamports,
     quotedFeeLamports: built.feeLamports,
     tokenAmount: built.tokenAmount,
     err: sim.err,
@@ -294,6 +320,21 @@ async function runCase(connection, cluster, user, buyLamports, uri, global, feeC
     balances: balances,
     sent: false,
   };
+}
+
+async function runCase(connection, cluster, user, buyLamports, uri, global, feeConfig) {
+  let last;
+  for (let attempt = 0; attempt < 4; attempt++) {
+    last = await runCaseOnce(connection, cluster, user, buyLamports, uri, global, feeConfig);
+    const row = (last.accounts || []).find(function (item) {
+      return item.address === launch.FEE_RECIPIENT;
+    });
+    const delta = row && row.feeDeltaLamports;
+    if (last.err != null) return last;
+    if (delta === String(launch.FEE_LAMPORTS)) return last;
+    console.error("fee recipient delta", delta, "retry", attempt + 1);
+  }
+  return last;
 }
 
 async function runPair(cluster, uri) {
@@ -404,15 +445,28 @@ async function main() {
     createV2: result.create,
     createV2AndBuy: result.createAndBuy,
     mainnetCost: buyBalances && createBalances ? {
+      infidripFeeLamports: String(launch.FEE_LAMPORTS),
+      feeRecipient: launch.FEE_RECIPIENT,
+      approach: {
+        createOnly: result.create.approach,
+        createAndBuy: result.createAndBuy.approach,
+        lookupTable: launch.LAUNCH_LOOKUP_TABLE,
+      },
+      bytes: {
+        createOnly: result.create.bytes,
+        createAndBuy: result.createAndBuy.bytes,
+      },
       createOnly: {
         networkFeeLamports: createBalances.networkFeeLamports,
         rentFloorLamports: createBalances.rentFloorLamports,
-        creationFeeLamports: (BigInt(createBalances.payerSpentLamports) - BigInt(createBalances.networkFeeLamports) - BigInt(createBalances.rentFloorLamports)).toString(),
+        infidripFeeLamports: String(launch.FEE_LAMPORTS),
+        creationFeeLamports: (BigInt(createBalances.payerSpentLamports) - BigInt(createBalances.networkFeeLamports) - BigInt(createBalances.rentFloorLamports) - BigInt(launch.FEE_LAMPORTS)).toString(),
         payerSpentLamports: createBalances.payerSpentLamports,
       },
       createAndBuy: {
         networkFeeLamports: buyBalances.networkFeeLamports,
         rentFloorLamports: buyBalances.rentFloorLamports,
+        infidripFeeLamports: String(launch.FEE_LAMPORTS),
         creationFeeLamports: "0",
         initialBuyLamports: "1000000",
         lamportsAboveRentOnNewAccounts: buyBalances.lamportsAboveRentOnNewAccounts,
@@ -425,7 +479,8 @@ async function main() {
         "network fee is the fee-payer decrease minus lamports gained by the other accounts",
         "accounts that already existed and moved by more than 0.002 SOL are left out as live drift",
         "rent floor is getMinimumBalanceForRentExemption for each new account's post data length",
-        "creation fee is the create-only payer spend minus that network fee and rent floor",
+        "creation fee is the create-only payer spend minus that network fee, rent floor, and the 50000000 lamport Infidrip fee",
+      "the Infidrip fee is the fee recipient lamport increase and must be exactly 50000000",
       ],
     } : null,
     notes: [
@@ -450,7 +505,15 @@ async function main() {
     cost: proof.mainnetCost,
     attempts: attempts,
   }, null, 2));
-  if (result.create.err != null || result.createAndBuy.err != null) process.exitCode = 2;
+  const feeOk = function (row) {
+    const found = (row.accounts || []).find(function (item) {
+      return item.address === launch.FEE_RECIPIENT;
+    });
+    return found && found.feeDeltaLamports === String(launch.FEE_LAMPORTS);
+  };
+  if (result.create.err != null || result.createAndBuy.err != null || !feeOk(result.create) || !feeOk(result.createAndBuy)) {
+    process.exitCode = 2;
+  }
 }
 
 main().catch(function (err) {

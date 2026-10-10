@@ -275,7 +275,7 @@ function renderCost(cost) {
     ["Your slice, initial buy", launch.formatSol(cost.buy) + " SOL"],
     ["Curve fee inside that buy", cost.feeText],
     ["Image storage", cost.storageText],
-    ["Infidrip fee", "0 SOL"],
+    ["Infidrip fee", launch.formatSol(launch.FEE_LAMPORTS) + " SOL"],
     ["Total", launch.formatSol(cost.total) + " SOL"],
   ];
   root.replaceChildren();
@@ -358,7 +358,8 @@ async function refreshQuote() {
     const networkFee = BigInt(built.feeLamports);
     const rentTotal = BigInt(rent.total);
     const buy = BigInt(form.buyLamports);
-    const total = networkFee + rentTotal + buy + storage;
+    const infidripFee = BigInt(launch.FEE_LAMPORTS);
+    const total = networkFee + rentTotal + buy + storage + infidripFee;
     const feePct = ((rates.protocolFeeBps + rates.creatorFeeBps + rates.lpFeeBps) / 100).toFixed(2);
     const cost = {
       networkFee: networkFee.toString(),
@@ -373,7 +374,7 @@ async function refreshQuote() {
       storageText: state.storageKnown
         ? launch.formatSol(storage) + " SOL"
         : "Priced after you connect.",
-      note: "You pay this. Infidrip does not add a fee. The coins you do not buy stay on the curve, where anyone can trade them.",
+      note: "You pay this, including the Infidrip launch fee. The coins you do not buy stay on the curve, where anyone can trade them.",
       rates: rates,
       rentParts: rent,
       cluster: form.cluster,
@@ -554,6 +555,7 @@ async function onLaunch(event) {
   }
   const button = $("launch-btn");
   button.disabled = true;
+  let feeSent = false;
   try {
     const connection = launch.connectionFor(form.cluster, state.quote.rpc);
     const loaded = await launch.loadCurve(connection);
@@ -576,7 +578,7 @@ async function onLaunch(event) {
       uri: stored.metadataUri,
       buyLamports: form.buyLamports,
     });
-    const total = BigInt(built.feeLamports) + BigInt(rent.total) + BigInt(form.buyLamports);
+    const total = BigInt(built.feeLamports) + BigInt(rent.total) + BigInt(form.buyLamports) + BigInt(launch.FEE_LAMPORTS) + BigInt(state.quote.storage || 0);
     const balance = BigInt(await connection.getBalance(state.wallet));
     if (balance < total) {
       setStatus("Not enough SOL in this wallet for the fees and the initial buy.", true);
@@ -584,9 +586,35 @@ async function onLaunch(event) {
     }
     setStatus("Confirm the launch in Phantom.", false);
     built.tx.sign([mintKey]);
-    const signed = await phantom.signTransaction(built.tx);
-    const raw = signed instanceof VersionedTransaction ? signed : built.tx;
-    const signature = await connection.sendRawTransaction(raw.serialize(), {
+    let launchTx = built.tx;
+    if (built.feeTx) {
+      let signedFee;
+      let signedLaunch;
+      if (phantom.signAllTransactions) {
+        const signed = await phantom.signAllTransactions([built.feeTx, built.tx]);
+        signedFee = signed[0];
+        signedLaunch = signed[1];
+      } else {
+        signedFee = await phantom.signTransaction(built.feeTx);
+        signedLaunch = await phantom.signTransaction(built.tx);
+      }
+      const feeRaw = signedFee instanceof VersionedTransaction ? signedFee : built.feeTx;
+      const feeSignature = await connection.sendRawTransaction(feeRaw.serialize(), {
+        skipPreflight: false,
+        maxRetries: 3,
+      });
+      await connection.confirmTransaction({
+        signature: feeSignature,
+        blockhash: built.feeBlockhash,
+        lastValidBlockHeight: built.feeLastValidBlockHeight,
+      }, "confirmed");
+      feeSent = true;
+      launchTx = signedLaunch instanceof VersionedTransaction ? signedLaunch : built.tx;
+    } else {
+      const signed = await phantom.signTransaction(built.tx);
+      launchTx = signed instanceof VersionedTransaction ? signed : built.tx;
+    }
+    const signature = await connection.sendRawTransaction(launchTx.serialize(), {
       skipPreflight: false,
       maxRetries: 3,
     });
@@ -616,7 +644,9 @@ async function onLaunch(event) {
     showResult(result);
     setStatus("Launched. The coin can be traded on the curve.", false);
   } catch (err) {
-    if (err && err.code === "insufficient") {
+    if (feeSent) {
+      setStatus("The launch fee was sent, and the coin transaction was not.", true);
+    } else if (err && err.code === "insufficient") {
       setStatus("Not enough SOL in this wallet for the fees and the initial buy.", true);
     } else {
       setStatus(explain(err), true);
