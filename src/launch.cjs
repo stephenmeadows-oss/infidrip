@@ -1,6 +1,6 @@
 "use strict";
 
-const { Connection, PublicKey, TransactionMessage, VersionedTransaction } = require("@solana/web3.js");
+const { Connection, PublicKey, SystemProgram, TransactionMessage, VersionedTransaction } = require("@solana/web3.js");
 const { getMintLen, ExtensionType, ACCOUNT_SIZE } = require("@solana/spl-token");
 const BN = require("bn.js");
 const {
@@ -17,6 +17,14 @@ const {
 const TOTAL_SUPPLY_TOKENS = 1000000000;
 const DECIMALS = 6;
 const ESTIMATE_URI = "https://gateway.irys.xyz/" + "a".repeat(43);
+const TX_LIMIT = 1232;
+// UNCONFIRMED, must be verified by owner before merge.
+const FEE_RECIPIENT = "EEQzHtX66bqacFvkb8hi1Xrovrek8GmXBGP8kFrh5Y6H";
+const FEE_LAMPORTS = 50000000;
+// Active mainnet lookup table that already stores the shared program accounts.
+// It is not Infidrip's. Used only when the fee transfer would pass 1232 bytes.
+const LAUNCH_LOOKUP_TABLE = "Hyif6eWb8x88RVrvjPfabsgRYnwkVnyByEXTVTXbUcyP";
+const NOT_DEACTIVATED = "18446744073709551615";
 
 const RPCS = {
   "mainnet-beta": [
@@ -119,6 +127,56 @@ function tokensForBuy(global, feeConfig, buyLamports) {
   return (slipped.isZero() ? quoted : slipped).toString(10);
 }
 
+function feeTransfer(user) {
+  return SystemProgram.transfer({
+    fromPubkey: user,
+    toPubkey: new PublicKey(FEE_RECIPIENT),
+    lamports: FEE_LAMPORTS,
+  });
+}
+
+const lookupCache = new Map();
+
+async function usableLookupTable(connection) {
+  const cacheKey = connection.rpcEndpoint || "";
+  const cached = lookupCache.get(cacheKey);
+  if (cached && cached.expires > Date.now()) return cached.table;
+  const result = await connection.getAddressLookupTable(new PublicKey(LAUNCH_LOOKUP_TABLE));
+  const table = result && result.value;
+  if (!table || String(table.state.deactivationSlot) !== NOT_DEACTIVATED) {
+    lookupCache.set(cacheKey, { table: null, expires: Date.now() + 15000 });
+    return null;
+  }
+  lookupCache.set(cacheKey, { table: table, expires: Date.now() + 60000 });
+  return table;
+}
+
+async function compileLaunch(connection, user, instructions, lookupTables) {
+  const block = await connection.getLatestBlockhash("confirmed");
+  const message = new TransactionMessage({
+    payerKey: user,
+    recentBlockhash: block.blockhash,
+    instructions: instructions,
+  }).compileToV0Message(lookupTables || []);
+  const tx = new VersionedTransaction(message);
+  let bytes = TX_LIMIT + 1;
+  try {
+    bytes = tx.serialize().length;
+  } catch (err) {
+    bytes = TX_LIMIT + 1;
+  }
+  const feeInfo = await connection.getFeeForMessage(message, "confirmed");
+  if (feeInfo.value == null) throw new Error("Could not price the network fee.");
+  return {
+    tx: tx,
+    bytes: bytes,
+    blockhash: block.blockhash,
+    lastValidBlockHeight: block.lastValidBlockHeight,
+    networkFee: feeInfo.value.toString(),
+    lookupTables: lookupTables || [],
+  };
+}
+
 async function buildLaunchTransaction(args) {
   const user = args.user instanceof PublicKey ? args.user : new PublicKey(args.user);
   const mint = args.mint instanceof PublicKey ? args.mint : new PublicKey(args.mint);
@@ -154,26 +212,52 @@ async function buildLaunchTransaction(args) {
       holderReward: false,
     });
   }
-  const block = await args.connection.getLatestBlockhash("confirmed");
-  const message = new TransactionMessage({
-    payerKey: user,
-    recentBlockhash: block.blockhash,
-    instructions: instructions,
-  }).compileToV0Message();
-  const tx = new VersionedTransaction(message);
-  const feeInfo = await args.connection.getFeeForMessage(message, "confirmed");
-  if (feeInfo.value == null) throw new Error("Could not price the network fee.");
-  const bytes = tx.serialize().length;
-  if (bytes > 1232) {
-    throw new Error("The transaction is too large. Shorten the name or ticker.");
+  const withFee = instructions.concat([feeTransfer(user)]);
+  let built = await compileLaunch(args.connection, user, withFee, []);
+  let approach = "same-transaction";
+  if (built.bytes > TX_LIMIT) {
+    const table = await usableLookupTable(args.connection);
+    if (table) {
+      const shrunk = await compileLaunch(args.connection, user, withFee, [table]);
+      if (shrunk.bytes <= TX_LIMIT) {
+        built = shrunk;
+        approach = "address-lookup-table";
+      }
+    }
+  }
+  if (built.bytes > TX_LIMIT) {
+    const launchBuilt = await compileLaunch(args.connection, user, instructions, []);
+    const feeBuilt = await compileLaunch(args.connection, user, [feeTransfer(user)], []);
+    if (launchBuilt.bytes > TX_LIMIT || feeBuilt.bytes > TX_LIMIT) {
+      throw new Error("The transaction is too large. Shorten the name or ticker.");
+    }
+    return {
+      tx: launchBuilt.tx,
+      feeTx: feeBuilt.tx,
+      approach: "separate-fee-transaction",
+      tokenAmount: tokenAmount,
+      feeLamports: (BigInt(launchBuilt.networkFee) + BigInt(feeBuilt.networkFee)).toString(),
+      infidripFeeLamports: String(FEE_LAMPORTS),
+      bytes: launchBuilt.bytes,
+      feeTxBytes: feeBuilt.bytes,
+      blockhash: launchBuilt.blockhash,
+      lastValidBlockHeight: launchBuilt.lastValidBlockHeight,
+      feeBlockhash: feeBuilt.blockhash,
+      feeLastValidBlockHeight: feeBuilt.lastValidBlockHeight,
+      lookupTables: [],
+    };
   }
   return {
-    tx: tx,
+    tx: built.tx,
+    feeTx: null,
+    approach: approach,
     tokenAmount: tokenAmount,
-    feeLamports: feeInfo.value.toString(),
-    bytes: bytes,
-    blockhash: block.blockhash,
-    lastValidBlockHeight: block.lastValidBlockHeight,
+    feeLamports: built.networkFee,
+    infidripFeeLamports: String(FEE_LAMPORTS),
+    bytes: built.bytes,
+    blockhash: built.blockhash,
+    lastValidBlockHeight: built.lastValidBlockHeight,
+    lookupTables: built.lookupTables,
   };
 }
 
@@ -201,6 +285,10 @@ module.exports = {
   TOTAL_SUPPLY_TOKENS,
   DECIMALS,
   ESTIMATE_URI,
+  TX_LIMIT,
+  FEE_RECIPIENT,
+  FEE_LAMPORTS,
+  LAUNCH_LOOKUP_TABLE,
   RPCS,
   PUMP_PROGRAM_ID,
   endpointFor,
