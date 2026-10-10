@@ -46,6 +46,7 @@
       linear-gradient(180deg, rgba(3,5,10,0.08) 0%, rgba(3,5,10,0.18) 42%, rgba(3,5,10,0.82) 78%, #03050a 100%),
       url("hero.jpg") center 18% / cover no-repeat;
     overflow: hidden;
+    animation: hero-drift 48s ease-in-out infinite alternate;
   }
   .rain {
     pointer-events: none;
@@ -63,6 +64,14 @@
   @keyframes rain {
     from { background-position: 0 -80px; }
     to { background-position: 0 80px; }
+  }
+  @keyframes hero-drift {
+    from { background-position: center center, center 14%; }
+    to { background-position: center center, center 28%; }
+  }
+  @keyframes hero-drift-phone {
+    from { background-position: center top, center top; }
+    to { background-position: center top, center 3%; }
   }
   .hero-copy {
     position: relative;
@@ -109,6 +118,7 @@
     max-width: 46rem;
     color: #d5e6f5;
     font-size: clamp(1.05rem, 2vw, 1.28rem);
+    text-shadow: 0 2px 18px rgba(0, 0, 0, 0.65);
   }
   .scroll {
     margin-top: 28px;
@@ -283,8 +293,12 @@
   .post {
     border-radius: 18px;
     overflow: hidden;
-    background: #0c121c;
-    border: 1px solid rgba(126,240,255,0.18);
+    background:
+      radial-gradient(120% 90% at 0% 0%, rgba(243, 194, 122, 0.2), transparent 48%),
+      radial-gradient(80% 70% at 100% 100%, rgba(126, 240, 255, 0.1), transparent 52%),
+      linear-gradient(180deg, #182238, #0c121c);
+    border: 1px solid rgba(243, 194, 122, 0.22);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 18px 36px rgba(0, 0, 0, 0.35);
   }
   .post-top {
     display: flex;
@@ -293,10 +307,38 @@
     padding: 12px;
   }
   .avatar {
+    position: relative;
     width: 36px;
     height: 36px;
+    flex: none;
     border-radius: 50%;
     background: conic-gradient(from 120deg, var(--cyan), var(--blue), var(--gold), var(--cyan));
+    box-shadow: 0 0 0 2px rgba(243, 194, 122, 0.55), 0 8px 16px rgba(0, 0, 0, 0.45);
+    overflow: hidden;
+  }
+  /* Portrait slot. A photo of a real person can replace this fill on [data-avatar-slot]. */
+  .avatar.is-harbor {
+    background: radial-gradient(circle at 32% 30%, #ffe7c4, #e39a45 46%, #6b3416 82%);
+  }
+  .avatar.is-market {
+    background: radial-gradient(circle at 68% 26%, #fff3d2, #f3c27a 40%, #1c645c 82%);
+  }
+  .avatar.is-studio {
+    background: radial-gradient(circle at 36% 28%, #f3fdff, #7ef0ff 38%, #24366b 80%);
+  }
+  .avatar.is-harbor::after,
+  .avatar.is-market::after,
+  .avatar.is-studio::after {
+    content: attr(data-letter);
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-family: Orbitron, sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: #1a120c;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
   }
   .who { font-weight: 700; font-size: 14px; }
   .where { color: var(--muted); font-size: 12px; }
@@ -509,10 +551,17 @@
   }
   .actions {
     display: flex;
-    gap: 14px;
+    gap: 8px;
     padding: 0 14px 14px;
-    color: var(--muted);
+    color: #d7e4f1;
     font-size: 13px;
+  }
+  .actions span {
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(243, 194, 122, 0.28);
+    background: rgba(243, 194, 122, 0.08);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
   }
   .story {
     padding-right: 10px;
@@ -535,8 +584,11 @@
   .band {
     padding: 22px;
     border-radius: 18px;
-    background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015));
+    background:
+      radial-gradient(90% 80% at 0% 0%, rgba(126, 240, 255, 0.08), transparent 46%),
+      linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015));
     border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.08);
   }
   .band strong { display: block; font-family: Orbitron, sans-serif; margin-bottom: 8px; color: var(--gold); letter-spacing: 0.08em; font-size: 13px; }
   footer {
@@ -576,6 +628,7 @@
       background-repeat: no-repeat, no-repeat;
       background-position: center top, center top;
       background-size: auto, calc(100% - 12vw) auto;
+      animation-name: hero-drift-phone;
     }
     .hero-copy {
       width: 100%;
@@ -923,8 +976,13 @@
     letter-spacing: 0.04em;
   }
   .disclaimer p { max-width: 46rem; color: #d5e6f5; margin: 0; }
+  .phone .pills { margin: 2px 6px 8px; }
+  .phone.is-sample #card-image { display: none; }
   @media (max-width: 900px) {
     .launcher-grid { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hero, .rain { animation: none; }
   }
 </style>
 </head>
@@ -936,11 +994,12 @@
       <h1>
         <span>Enable normie tokenization.</span>
       </h1>
-      <p class="lede">We meet them where they are.</p>
+      <p class="lede">We meet them where they are. Launch a token right from Facebook. Your people are already there. A token gives that community something to own, and a reason to grow.</p>
       <p class="support">The next wave on chain will not arrive through a trading screen. It arrives through the names people already love. Infidrip is the door.</p>
       <div class="hero-links">
         <a class="scroll" href="#launcher"><b>↓</b> Launch a coin</a>
         <a class="scroll" href="#taps"><b>↓</b> See how it works</a>
+        <a class="scroll" href="#donate"><b>+</b> Donate</a>
       </div>
     </div>
   </header>
@@ -954,13 +1013,13 @@
               <div class="num">01</div>
               <label class="label" for="name">NAME</label>
               <input class="field" id="name" name="name" type="text" maxlength="32" autocomplete="off" placeholder="Name">
-              <div class="hint">What your people already call you.</div>
+              <div class="hint">The business, or you.</div>
             </article>
             <article class="tap">
               <div class="num">02</div>
               <label class="label" for="ticker">TICKER</label>
               <input class="field" id="ticker" name="ticker" type="text" maxlength="13" autocomplete="off" autocapitalize="characters" placeholder="TICKER">
-              <div class="hint">The word the timeline will type.</div>
+              <div class="hint">Short enough for a group chat.</div>
             </article>
             <article class="tap">
               <div class="num">03</div>
@@ -1028,26 +1087,35 @@
               <p class="hint">Coins launch on a public Solana bonding curve.</p>
               <p class="hint">Holder rewards: Coming soon.</p>
             </div>
-            <div class="phone" aria-label="Token card preview">
+            <div class="phone is-sample" aria-label="Token card in a social feed">
               <div class="notch"></div>
-              <div class="feedhead"><strong>Preview</strong></div>
+              <div class="pills" id="feeds">
+                <button class="chip on" type="button" data-feed="Facebook">Facebook</button>
+                <button class="chip" type="button" data-feed="Instagram">Instagram</button>
+                <button class="chip" type="button" data-feed="X">X</button>
+              </div>
+              <div class="feedhead"><strong id="feed-name">Facebook</strong><span>following</span></div>
               <article class="post">
                 <div class="post-top">
+                  <!-- data-avatar-slot is the portrait slot. A photo of a real person can replace the CSS fill later. -->
+                  <div class="avatar is-harbor" id="post-avatar" data-avatar-slot="harbor" data-letter="H" role="img" aria-label="Harbor Roast"></div>
                   <div>
-                    <div class="who" id="post-name">Name</div>
-                    <div class="where">Token card</div>
+                    <div class="who" id="post-name">Harbor Roast</div>
+                    <div class="where" id="post-where">Facebook · just now</div>
                   </div>
                 </div>
                 <div class="card" id="token-card">
+                  <div class="mark">INFIDRIP</div>
                   <img id="card-image" alt="" hidden>
-                  <h3 id="card-name">Name</h3>
-                  <div class="ticker" id="card-ticker">TICKER</div>
+                  <h3 id="card-name">Harbor Roast</h3>
+                  <div class="ticker" id="card-ticker">HRST</div>
                   <div class="meta">
-                    <div><small>Your slice</small><b id="card-slice">0 SOL</b></div>
+                    <div><small>Your slice</small><b id="card-slice">0.2 SOL</b></div>
                     <div><small>Chain</small><b id="card-chain">Solana</b></div>
                   </div>
                   <div id="card-links" hidden></div>
                 </div>
+                <div class="actions"><span>Like</span><span>Reply</span><span>Share</span></div>
               </article>
               <div id="feed-list"></div>
             </div>
@@ -1055,6 +1123,16 @@
         </div>
       </section>
     </form>
+    <section id="people" aria-labelledby="people-title">
+      <div class="wrap">
+        <h2 id="people-title">Your people are already there.</h2>
+        <div class="bands">
+          <div class="band"><strong>WHERE THEY ARE</strong> Launch a token right from Facebook. Instagram and X carry the same card.</div>
+          <div class="band"><strong>WHAT THEY SEE</strong> The business, or you. A ticker short enough for a group chat. The SOL you buy in first. Solana, with Base and Ethereum coming soon.</div>
+          <div class="band"><strong>A REASON TO GROW</strong> A token gives that community something to own, and a reason to grow.</div>
+        </div>
+      </div>
+    </section>
     <section class="brain" id="brain" aria-labelledby="brain-title">
       <div class="wrap">
         <div class="kicker"><i></i> Coming soon</div>
@@ -1126,11 +1204,130 @@
     </section>
   </main>
   <footer>
-    <div>Infidrip</div>
+    <div>Infidrip. Token launchpad.</div>
     <div>We meet them where they are.</div>
     <a href="#donate">Donate</a>
   </footer>
 <script src="assets/launcher.js"></script>
+<script>
+(function () {
+  var stories = [
+    { name: "Harbor Roast", ticker: "HRST", slice: "0.2 SOL", slot: "harbor", letter: "H" },
+    { name: "Night Market", ticker: "NMKT", slice: "0.15 SOL", slot: "market", letter: "N" },
+    { name: "Studio North", ticker: "STNR", slice: "0.25 SOL", slot: "studio", letter: "S" }
+  ];
+  var index = 0;
+  var feed = "Facebook";
+  var phone = document.querySelector("#launcher .phone");
+  var avatar = document.getElementById("post-avatar");
+  var image = document.getElementById("card-image");
+  var observed = ["card-name", "card-ticker", "card-slice", "card-chain", "post-name", "card-image"];
+  var observer = new MutationObserver(function () {
+    if (!visitorTyping()) paintSample();
+  });
+
+  function fieldText(id) {
+    var el = document.getElementById(id);
+    return el && el.value ? el.value.trim() : "";
+  }
+
+  function visitorTyping() {
+    var file = document.getElementById("image-file");
+    if (file && file.files && file.files.length) return true;
+    return ["name", "ticker", "slice", "description", "twitter", "website"].some(function (id) {
+      return fieldText(id) !== "";
+    });
+  }
+
+  function selectedChain() {
+    var on = document.querySelector("#chains .chip.on");
+    return on ? on.getAttribute("data-chain") : "Solana";
+  }
+
+  function watch() {
+    observed.forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) observer.observe(el, {
+        childList: true,
+        characterData: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ["hidden", "src"]
+      });
+    });
+  }
+
+  function pause(fn) {
+    observer.disconnect();
+    fn();
+    queueMicrotask(watch);
+  }
+
+  function paintSample() {
+    var story = stories[index];
+    pause(function () {
+      phone.classList.add("is-sample");
+      avatar.classList.remove("is-harbor", "is-market", "is-studio", "is-live");
+      avatar.classList.add("is-" + story.slot);
+      avatar.setAttribute("data-avatar-slot", story.slot);
+      avatar.setAttribute("data-letter", story.letter);
+      avatar.setAttribute("aria-label", story.name);
+      document.getElementById("post-name").textContent = story.name;
+      document.getElementById("card-name").textContent = story.name;
+      document.getElementById("card-ticker").textContent = story.ticker;
+      document.getElementById("card-slice").textContent = story.slice;
+      document.getElementById("card-chain").textContent = selectedChain();
+      document.getElementById("feed-name").textContent = feed;
+      document.getElementById("post-where").textContent = feed + " · just now";
+      image.hidden = true;
+    });
+  }
+
+  function paintLive() {
+    pause(function () {
+      phone.classList.remove("is-sample");
+      avatar.classList.remove("is-harbor", "is-market", "is-studio");
+      avatar.classList.add("is-live");
+      avatar.setAttribute("data-avatar-slot", "live");
+      avatar.removeAttribute("data-letter");
+      avatar.setAttribute("aria-label", "Your coin");
+      document.getElementById("feed-name").textContent = feed;
+      document.getElementById("post-where").textContent = feed + " · your coin";
+    });
+  }
+
+  function sync() {
+    if (visitorTyping()) paintLive();
+    else paintSample();
+  }
+
+  document.getElementById("feeds").addEventListener("click", function (event) {
+    var button = event.target.closest("button");
+    if (!button) return;
+    feed = button.getAttribute("data-feed");
+    document.querySelectorAll("#feeds .chip").forEach(function (node) {
+      node.classList.toggle("on", node === button);
+    });
+    sync();
+  });
+
+  ["name", "ticker", "slice", "description", "twitter", "website"].forEach(function (id) {
+    document.getElementById(id).addEventListener("input", sync);
+  });
+  document.getElementById("image-file").addEventListener("change", sync);
+  document.getElementById("chains").addEventListener("click", function () {
+    if (!visitorTyping()) paintSample();
+  });
+
+  setInterval(function () {
+    if (visitorTyping()) return;
+    index = (index + 1) % stories.length;
+    paintSample();
+  }, 4200);
+
+  sync();
+})();
+</script>
 <script>
 (function () {
   var buttons = document.querySelectorAll(".pay-copy");
