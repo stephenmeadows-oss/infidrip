@@ -18,7 +18,7 @@ const TOTAL_SUPPLY_TOKENS = 1000000000;
 const DECIMALS = 6;
 const ESTIMATE_URI = "https://gateway.irys.xyz/" + "a".repeat(43);
 const TX_LIMIT = 1232;
-// UNCONFIRMED, must be verified by owner before merge.
+// Confirmed by owner 2026-10-10.
 const FEE_RECIPIENT = "EEQzHtX66bqacFvkb8hi1Xrovrek8GmXBGP8kFrh5Y6H";
 const FEE_LAMPORTS = 50000000;
 // Active mainnet lookup table that already stores the shared program accounts.
