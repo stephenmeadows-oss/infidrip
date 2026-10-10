@@ -1,0 +1,31 @@
+{
+  "name": "@infidrip/agent-guard",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Agent Guard v1 rules engine and ruleset schema. Pure and deterministic. No network, no wallet keys.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema/agent-guard-ruleset-v1.json": "./schema/agent-guard-ruleset-v1.json"
+  },
+  "scripts": {
+    "test": "node --import tsx --test test/*.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@noble/ed25519": "3.2.0",
+    "@noble/hashes": "2.4.0",
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1",
+    "canonicalize": "5.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "fast-check": "4.10.2",
+    "tsx": "4.21.0",
+    "typescript": "5.9.3"
+  }
+}
