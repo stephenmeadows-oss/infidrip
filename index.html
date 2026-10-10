@@ -127,6 +127,18 @@ h3 { margin: 0 0 8px; line-height: 1.15; }
   line-height: 1.6;
 }
 .hero-rest p { margin: 0; max-width: 38rem; }
+.brand-plate {
+  width: min(1180px, calc(100% - 128px));
+  margin: 4px auto 36px;
+}
+.brand-plate img {
+  width: 100%;
+  height: min(520px, 62vw);
+  object-fit: cover;
+  object-position: center 46%;
+  border-radius: 28px;
+  box-shadow: 0 22px 50px rgba(40, 28, 16, 0.14);
+}
 .hero-grid {
   display: grid;
   grid-template-columns: minmax(0, 0.96fr) minmax(0, 1.04fr);
@@ -138,7 +150,6 @@ h3 { margin: 0 0 8px; line-height: 1.15; }
   column-gap: 56px;
   row-gap: 12px;
   align-items: center;
-  min-height: calc(100vh - 92px);
 }
 .hero-kicker { grid-area: kicker; margin-bottom: 0; }
 .hero-grid h1 { grid-area: title; }
@@ -172,7 +183,7 @@ h3 { margin: 0 0 8px; line-height: 1.15; }
   width: 100%;
   height: 640px;
   object-fit: cover;
-  object-position: center 18%;
+  object-position: center 12%;
 }
 .social-phone {
   position: absolute;
@@ -838,7 +849,9 @@ footer a { color: #f6f1e8; }
   }
 }
 @media (max-width: 720px) {
-  .nav, .wrap { width: min(1180px, calc(100% - 40px)); }
+  .nav, .wrap, .brand-plate { width: min(1180px, calc(100% - 40px)); }
+  .brand-plate { margin-bottom: 22px; }
+  .brand-plate img { height: 78vw; max-height: 420px; border-radius: 20px; }
   .nav { padding-top: 18px; }
   section { padding: 72px 0; }
   #opening { padding-bottom: 56px; }
@@ -885,6 +898,9 @@ footer a { color: #f6f1e8; }
   </header>
   <main>
     <section id="opening" aria-label="Opening">
+      <figure class="brand-plate">
+        <img src="hero.jpg" width="1264" height="1568" alt="The Infidrip wordmark in chrome letters on a dripping chain.">
+      </figure>
       <div class="wrap hero-grid">
         <p class="kicker hero-kicker"><i></i> Infidrip</p>
         <h1>Enable normie tokenization.</h1>
@@ -898,7 +914,8 @@ footer a { color: #f6f1e8; }
         </div>
         <figure class="beat" id="beat-feed">
           <div class="feed-stage">
-            <img src="art/person-seated.jpg" width="864" height="1152" alt="Illustration of a smiling person seated on a sofa. Stylized artwork, not a photograph.">
+            <!-- Photoreal generated scene. Not a photograph of an Infidrip customer. -->
+            <img src="art/person-home.jpg" width="864" height="1152" alt="A smiling person seated on a sofa at home.">
             <div class="social-phone">
               <div class="social-screen">
                 <p class="social-label">Facebook</p>
@@ -911,17 +928,18 @@ footer a { color: #f6f1e8; }
               </div>
             </div>
           </div>
-          <figcaption>Illustration. An Infidrip post shows up in the Facebook feed they already open.</figcaption>
+          <figcaption>An Infidrip post shows up in the Facebook feed they already open.</figcaption>
         </figure>
       </div>
       <div class="seq-line" aria-hidden="true"><span></span></div>
       <div class="wrap click-grid">
         <figure class="beat" id="beat-click">
           <div class="click-frame">
-            <img src="art/moment-clicks.jpg" width="1152" height="864" alt="Illustration of a smiling person in a warm light, holding a tablet that shows a coin they launched, with neighbors nearby. Stylized artwork, not a photograph.">
+            <!-- Photoreal generated scene. Not a photograph of an Infidrip customer. -->
+            <img src="art/moment-clicks.jpg" width="1152" height="864" alt="A person holding a tablet and smiling, with neighbors nearby.">
             <div class="dawn" aria-hidden="true"></div>
           </div>
-          <figcaption>Illustration. It clicks. They launch a coin of their own, and the feeling is freedom.</figcaption>
+          <figcaption>It clicks. They launch a coin of their own, and the feeling is freedom.</figcaption>
         </figure>
         <div class="click-copy">
           <p class="kicker"><i></i> The moment it clicks</p>
@@ -1118,8 +1136,9 @@ footer a { color: #f6f1e8; }
         <h2 id="community-title">Proud of a coin they can point to.</h2>
         <p class="community-lead">Neighbors gather around a tablet because the coin is theirs. It carries a name they chose. The pride is personal, and the place is local.</p>
         <figure class="community-figure">
-          <img src="art/community-gathering.jpg" width="1280" height="720" alt="Illustration of smiling neighbors gathered around a tablet, proud of a coin they launched. Stylized artwork, not a photograph of real people.">
-          <figcaption>Illustration. A local gathering, proud of a coin of their own.</figcaption>
+          <!-- Photoreal generated scene. Not a photograph of Infidrip customers. -->
+          <img src="art/community-gathering.jpg" width="1280" height="720" alt="People in a neighborhood gathered around a tablet, smiling.">
+          <figcaption>A local gathering, proud of a coin of their own.</figcaption>
         </figure>
       </div>
     </section>
