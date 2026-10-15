@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://infidrip.dev/schemas/agent-guard/ruleset-v1.json",
+  "title": "Agent Guard Ruleset v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "ruleset_id", "version", "agent_id", "valid_from", "expires_at", "default_action", "assets", "allowlist", "caps"],
+  "properties": {
+    "schema_version": { "const": "agent-guard/ruleset/1" },
+    "ruleset_id": { "type": "string", "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$" },
+    "version": { "type": "integer", "minimum": 1 },
+    "agent_id": { "type": "string", "minLength": 1 },
+    "valid_from": { "type": "string", "format": "date-time" },
+    "expires_at": { "type": "string", "format": "date-time" },
+    "default_action": { "const": "deny" },
+    "chains": {
+      "type": "array",
+      "items": { "enum": ["base", "base-sepolia", "solana", "solana-devnet"] },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "assets": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["asset_id", "decimals"],
+        "properties": {
+          "asset_id": { "type": "string", "pattern": "^(base|base-sepolia|solana|solana-devnet):(native|[A-Za-z0-9]+)$" },
+          "symbol": { "type": "string" },
+          "decimals": { "type": "integer", "minimum": 0, "maximum": 36 },
+          "max_per_tx_base_units": { "$ref": "#/$defs/uintString" },
+          "max_per_period_base_units": { "$ref": "#/$defs/uintString" },
+          "price_feed_id": { "type": "string" },
+          "require_price": { "type": "boolean", "default": true }
+        }
+      }
+    },
+    "allowlist": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["chain", "address"],
+        "properties": {
+          "chain": { "enum": ["base", "base-sepolia", "solana", "solana-devnet"] },
+          "address": { "type": "string", "minLength": 32, "maxLength": 64 },
+          "label": { "type": "string", "maxLength": 80 },
+          "expires_at": { "type": "string", "format": "date-time" },
+          "max_per_tx_usd": { "$ref": "#/$defs/usdString" },
+          "allowed_assets": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "caps": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["max_per_tx_usd", "period_seconds", "max_per_period_usd"],
+      "properties": {
+        "max_per_tx_usd": { "$ref": "#/$defs/usdString" },
+        "period_seconds": { "type": "integer", "minimum": 60, "maximum": 2592000 },
+        "max_per_period_usd": { "$ref": "#/$defs/usdString" },
+        "max_tx_count_per_period": { "type": "integer", "minimum": 1 },
+        "escalate_above_usd": { "$ref": "#/$defs/usdString" },
+        "count_fees": { "type": "boolean", "default": false }
+      }
+    },
+    "pricing": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_price_age_seconds": { "type": "integer", "minimum": 1, "maximum": 3600, "default": 60 },
+        "max_source_deviation_bps": { "type": "integer", "minimum": 1, "maximum": 10000, "default": 100 },
+        "stable_depeg_tolerance_bps": { "type": "integer", "minimum": 1, "maximum": 10000, "default": 200 }
+      }
+    },
+    "allowed_kinds": {
+      "type": "array",
+      "items": { "enum": ["native_transfer", "token_transfer"] },
+      "default": ["native_transfer", "token_transfer"]
+    },
+    "notify": {
+      "type": "object",
+      "properties": {
+        "on_deny": { "type": "boolean", "default": true },
+        "on_escalate": { "type": "boolean", "default": true },
+        "channel": { "type": "string" }
+      }
+    }
+  },
+  "$defs": {
+    "uintString": { "type": "string", "pattern": "^(0|[1-9][0-9]{0,77})$" },
+    "usdString": { "type": "string", "pattern": "^(0|[1-9][0-9]{0,11})(\\.[0-9]{1,6})?$" }
+  }
+}

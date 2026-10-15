@@ -1,0 +1,29 @@
+name: agent-guard
+
+on:
+  pull_request:
+    paths:
+      - "packages/agent-guard/**"
+      - ".github/workflows/agent-guard.yml"
+  push:
+    branches: [main]
+    paths:
+      - "packages/agent-guard/**"
+      - ".github/workflows/agent-guard.yml"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/agent-guard
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: packages/agent-guard/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - run: npm run typecheck
