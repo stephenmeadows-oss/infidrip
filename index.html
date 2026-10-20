@@ -1010,6 +1010,9 @@ footer a { color: var(--gold); }
   .click-frame img { transform: none; }
   body::before, .brand-plate::after { animation: none; }
 }
+#drip-bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+/* A light scrim behind content cards so text stays crisp over the drips. */
+#taps .tap, .bands .band { background-color: rgba(4, 4, 8, 0.55); }
 </style>
 </head>
 <body>
@@ -1360,6 +1363,7 @@ footer a { color: var(--gold); }
     <div>We meet them where they are.</div>
     <a href="#donate">Become a founding supporter</a>
   </footer>
+<script src="assets/drip.js"></script>
 <script src="assets/launcher.js"></script>
 <script src="assets/brain.js"></script>
 <script>
