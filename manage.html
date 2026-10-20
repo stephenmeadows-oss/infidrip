@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Train your coin's brain | Infidrip</title>
+<meta name="description" content="Enable normie tokenization. We meet them where they are. Infidrip lives inside Facebook and the social apps people already use.">
+<meta property="og:title" content="Infidrip | Enable normie tokenization">
+<meta property="og:description" content="Enable normie tokenization. We meet them where they are. Infidrip lives inside Facebook and the social apps people already use.">
+<meta property="og:image" content="hero.jpg">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#040408">
+<link rel="icon" href="hero.jpg">
+<meta name="infidrip-brain-api" content="">
+<link rel="stylesheet" href="assets/brain.css">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500;1,9..144,600&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root { --void:#040408; --ink:#f4efe6; --muted:#b1a89c; --line:rgba(239,186,125,0.22); --gold:#efba7d; --gold-bright:#fff5c0; --cyan:#8feafc; }
+body { margin:0; background:var(--void); color:var(--ink); font-family:Outfit, system-ui, sans-serif; }
+.wrap { width:min(980px, calc(100% - 40px)); margin:0 auto; }
+.label { font-size:12px; letter-spacing:0.12em; color:var(--gold); }
+.hint, .copy { color:var(--muted); }
+a { color:var(--cyan); }
+.launch-btn { background:linear-gradient(180deg, var(--gold-bright), var(--gold)); color:#1a1208; border:0; border-radius:999px; padding:12px 22px; font:inherit; font-weight:600; cursor:pointer; }
+.m-row { display:flex; gap:10px; flex-wrap:wrap; margin:16px 0; }
+.m-row input.field { flex:1; min-width:260px; }
+</style>
+</head>
+<body>
+<main id="manage" class="wrap">
+  <p><a href="./">Infidrip</a></p>
+  <h1>Train your coin's brain</h1>
+  <p class="copy">Only the wallet that launched the coin can change its brain. You sign a short message to prove it. Signing is free and sends nothing.</p>
+  <div class="m-row">
+    <input class="field" id="m-mint" placeholder="Coin address">
+    <select id="m-net"><option value="mainnet-beta">Mainnet</option><option value="devnet">Devnet</option></select>
+    <button type="button" class="launch-btn" id="m-open">Open with Phantom</button>
+  </div>
+  <p class="hint" id="m-status" aria-live="polite"></p>
+  <div id="m-body" hidden>
+    <label class="brain-toggle"><input type="checkbox" id="m-enabled" checked> Brain is on</label>
+            <div class="brain-grid">
+              <label>Name<input class="field" name="brain-name" maxlength="40" placeholder="Harbor"></label>
+              <label>Who it is<textarea name="brain-persona" maxlength="600" placeholder="The friendly voice of Harbor Roast, a corner coffee shop. Knows every regular by their order."></textarea></label>
+              <label>Voice and tone<textarea name="brain-voice" maxlength="300" placeholder="Warm, short, a little funny. No jargon."></textarea></label>
+              <label>What it knows<textarea name="brain-knowledge" maxlength="6000" placeholder="Hours, the menu, the story behind the coin, community events."></textarea></label>
+              <label>Links, one per line<textarea name="brain-links" placeholder="https://"></textarea></label>
+              <label>Rules<textarea name="brain-rules" maxlength="1500" placeholder="Never talk about price. Point new people to the Saturday meetup."></textarea></label>
+            </div>
+            <div class="brain-chat">
+              <div class="label">TEST CHAT</div>
+              <div class="brain-log" aria-live="polite"></div>
+              <div class="brain-row"><input class="field brain-input" type="text" placeholder="Say hi to your coin's brain"><button type="button" class="launch-btn brain-send">Send</button></div>
+            </div>
+    <p><button type="button" class="launch-btn" id="m-save">Save the brain</button></p>
+    <p class="hint">Test chat talks to the saved brain, so save first to try new training.</p>
+  </div>
+</main>
+<script src="assets/brain.js"></script>
+</body>
+</html>
