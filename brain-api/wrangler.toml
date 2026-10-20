@@ -1,0 +1,15 @@
+name = "infidrip-brain"
+main = "worker.js"
+compatibility_date = "2026-10-01"
+
+[vars]
+ALLOWED_ORIGIN = "https://infidrip.si,https://www.infidrip.si"
+LLM_BASE_URL = "https://api.x.ai/v1"
+LLM_MODEL = "grok-3-mini"
+
+# Create with: npx wrangler kv namespace create BRAINS, then paste the id here.
+[[kv_namespaces]]
+binding = "BRAINS"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"
+
+# Secret, set with: npx wrangler secret put LLM_API_KEY

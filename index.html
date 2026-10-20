@@ -11,6 +11,8 @@
 <meta property="og:type" content="website">
 <meta name="theme-color" content="#040408">
 <link rel="icon" href="hero.jpg">
+<meta name="infidrip-brain-api" content="">
+<link rel="stylesheet" href="assets/brain.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500;1,9..144,600&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -1108,17 +1110,15 @@ footer a { color: var(--gold); }
           <li>
             <span class="step-no">03</span>
             <div>
-              <p class="soon-flag">Coming soon</p>
               <h3>A brain</h3>
-              <p>They give it a brain.</p>
+              <p>They give it a brain. They teach it who it is, how it talks and what it knows, then chat with it before anyone else does.</p>
             </div>
           </li>
           <li>
             <span class="step-no">04</span>
             <div>
-              <p class="soon-flag">Coming soon</p>
-              <h3>The neighborhood</h3>
-              <p>The brain studies their local community, for example NoDa in Charlotte, tracks local trends, and makes content that rides them, building synergy.</p>
+              <h3>Their neighborhood</h3>
+              <p>They fill the brain with their place, for example NoDa in Charlotte: the spots, the people, the events. It answers like a neighbor, and they can keep teaching it after launch.</p>
             </div>
           </li>
         </ol>
@@ -1153,8 +1153,6 @@ footer a { color: var(--gold); }
               <div class="label">CHAIN</div>
               <div class="picks" id="chains">
                 <button class="chip on" type="button" data-chain="Solana">Solana</button>
-                <button class="chip" type="button" data-chain="Base">Base<span class="soon">Coming soon</span></button>
-                <button class="chip" type="button" data-chain="Ethereum">Ethereum<span class="soon">Coming soon</span></button>
               </div>
               <div class="hint">Chain: Solana.</div>
             </article>
@@ -1174,6 +1172,29 @@ footer a { color: var(--gold); }
             <label for="website">Website</label>
             <input id="website" name="website" type="url" inputmode="url" placeholder="https://" autocomplete="off">
           </details>
+        </div>
+      </section>
+      <section id="brain" aria-labelledby="brain-title">
+        <div class="wrap">
+          <h2 id="brain-title">Give it a brain. Optional.</h2>
+          <p class="copy">A brain is a little AI that speaks for your coin. You teach it, you test it, and it talks to your people. Skip it and nothing changes.</p>
+          <label class="brain-toggle"><input type="checkbox" id="brain-on"> Give this coin a brain</label>
+          <div id="brain-body" hidden>
+            <div class="brain-grid">
+              <label>Name<input class="field" name="brain-name" maxlength="40" placeholder="Harbor"></label>
+              <label>Who it is<textarea name="brain-persona" maxlength="600" placeholder="The friendly voice of Harbor Roast, a corner coffee shop. Knows every regular by their order."></textarea></label>
+              <label>Voice and tone<textarea name="brain-voice" maxlength="300" placeholder="Warm, short, a little funny. No jargon."></textarea></label>
+              <label>What it knows<textarea name="brain-knowledge" maxlength="6000" placeholder="Hours, the menu, the story behind the coin, community events."></textarea></label>
+              <label>Links, one per line<textarea name="brain-links" placeholder="https://"></textarea></label>
+              <label>Rules<textarea name="brain-rules" maxlength="1500" placeholder="Never talk about price. Point new people to the Saturday meetup."></textarea></label>
+            </div>
+            <div class="brain-chat">
+              <div class="label">TEST CHAT</div>
+              <div class="brain-log" aria-live="polite"></div>
+              <div class="brain-row"><input class="field brain-input" type="text" placeholder="Say hi to your coin's brain"><button type="button" class="launch-btn brain-send">Send</button></div>
+            </div>
+            <p class="hint">Your training stays on this device until you launch. After launch, one signature attaches it to your coin. You can keep training it later from its manage page.</p>
+          </div>
         </div>
       </section>
       <section id="launcher">
@@ -1198,6 +1219,11 @@ footer a { color: var(--gold); }
               </div>
               <p class="hint" id="launch-status" aria-live="polite"></p>
               <div id="result" hidden>
+                <div id="brain-after" hidden>
+                  <button type="button" class="launch-btn" id="brain-attach">Give it its brain</button>
+                  <p class="hint" id="brain-status" aria-live="polite"></p>
+                  <p class="hint"><a id="brain-manage-link" href="manage.html">Train this brain later</a></p>
+                </div>
                 <p class="mint-line" id="result-mint"></p>
                 <p class="result-links">
                   <a id="result-trade" href="#" target="_blank" rel="noopener noreferrer" hidden>Trading page</a>
@@ -1206,7 +1232,6 @@ footer a { color: var(--gold); }
                 <p class="hint" id="devnet-result" hidden>This devnet coin is not on the mainnet trading page.</p>
               </div>
               <p class="hint">Coins launch on a public Solana bonding curve.</p>
-              <p class="hint">Holder rewards: Coming soon.</p>
             </div>
             <div class="phone is-sample" aria-label="Token card in a social feed">
               <div class="notch"></div>
@@ -1234,6 +1259,7 @@ footer a { color: var(--gold); }
                     <div><small>Your slice</small><b id="card-slice">0.2 SOL</b></div>
                     <div><small>Chain</small><b id="card-chain">Solana</b></div>
                   </div>
+                  <div class="meta" id="card-brain" hidden><div><small>Brain</small><b id="card-brain-name">On</b></div></div>
                   <div id="card-links" hidden></div>
                 </div>
                 <div class="actions"><span>Like</span><span>Reply</span><span>Share</span></div>
@@ -1249,7 +1275,7 @@ footer a { color: var(--gold); }
         <h2 id="people-title">Your people are already there.</h2>
         <div class="bands">
           <div class="band"><strong>WHERE THEY ARE</strong> Launch a token right from Facebook. Instagram and X carry the same card.</div>
-          <div class="band"><strong>WHAT THEY SEE</strong> The business, or you. A ticker short enough for a group chat. The SOL you buy in first. Solana, with Base and Ethereum coming soon.</div>
+          <div class="band"><strong>WHAT THEY SEE</strong> The business, or you. A ticker short enough for a group chat. The SOL you buy in first. Solana.</div>
           <div class="band"><strong>A REASON TO GROW</strong> A token gives that community something to own, and a reason to grow.</div>
         </div>
       </div>
@@ -1335,6 +1361,7 @@ footer a { color: var(--gold); }
     <a href="#donate">Become a founding supporter</a>
   </footer>
 <script src="assets/launcher.js"></script>
+<script src="assets/brain.js"></script>
 <script>
 (function () {
   var stories = [
