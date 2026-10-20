@@ -460,6 +460,14 @@ section { padding: 108px 0; }
     0 24px 60px rgba(0, 0, 0, 0.35),
     0 0 36px rgba(239, 186, 125, 0.16);
 }
+#top-in-town { padding: 72px 0 40px; }
+.meme-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 22px; margin-top: 32px; }
+.meme-grid figure { margin: 0; }
+.meme-grid img { width: 100%; height: auto; aspect-ratio: 1 / 1; object-fit: contain; background: #0b0d12; display: block; border-radius: 22px; box-shadow: 0 18px 44px rgba(0,0,0,0.35), 0 0 28px rgba(239,186,125,0.14); }
+@media (max-width: 700px) {
+  .meme-grid { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 14px; padding-bottom: 10px; -webkit-overflow-scrolling: touch; }
+  .meme-grid figure { flex: 0 0 82%; scroll-snap-align: center; }
+}
 #taps { padding: 96px 0 20px; }
 #launcher {
   padding: 72px 0 108px;
@@ -1066,7 +1074,7 @@ footer a { color: var(--gold); }
         <figure class="beat" id="beat-click">
           <div class="click-frame">
             <!-- Photoreal generated scene. Not a photograph of an Infidrip customer. -->
-            <img src="art/moment-clicks.jpg" width="1152" height="864" alt="A person holding a tablet and smiling, with neighbors nearby.">
+            <img src="art/moment-clicks.jpg" width="1152" height="864" alt="A family in their kitchen smiling at a tablet together.">
             <div class="dawn" aria-hidden="true"></div>
           </div>
           <figcaption>It clicks. They launch a coin of their own, and the feeling is freedom.</figcaption>
@@ -1291,9 +1299,23 @@ footer a { color: var(--gold); }
         <p class="community-lead">Neighbors gather around a tablet because the coin is theirs. It carries a name they chose. The pride is personal, and the place is local.</p>
         <figure class="community-figure">
           <!-- Photoreal generated scene. Not a photograph of Infidrip customers. -->
-          <img src="art/community-gathering.jpg" width="1280" height="720" alt="People in a neighborhood gathered around a tablet, smiling.">
+          <img src="art/community-gathering.jpg" width="1280" height="720" alt="A family at their local bakery, smiling together.">
           <figcaption>A local gathering, proud of a coin of their own.</figcaption>
         </figure>
+      </div>
+    </section>
+
+    <section id="top-in-town" aria-labelledby="top-title">
+      <div class="wrap">
+        <p class="kicker"><i></i> Top in Town</p>
+        <h2 id="top-title">Who is Top in Town?</h2>
+        <p class="community-lead">Neighbors rank the local businesses they love. The taco truck, the salon, the groomer down the street. Every spot gets a coin and a spot on the board.</p>
+        <div class="meme-grid">
+          <figure><img src="art/memes/taco.jpg" width="800" height="651" loading="lazy" alt="Top in Town meme: the neighborhood taco truck."></figure>
+          <figure><img src="art/memes/advisor.jpg" width="800" height="800" loading="lazy" alt="Top in Town meme: the local financial advisor."></figure>
+          <figure><img src="art/memes/salon.jpg" width="800" height="800" loading="lazy" alt="Top in Town meme: the hometown hair salon."></figure>
+          <figure><img src="art/memes/groomer.jpg" width="800" height="800" loading="lazy" alt="Top in Town meme: the local dog groomer."></figure>
+        </div>
       </div>
     </section>
 
